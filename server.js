@@ -160,11 +160,45 @@ app.get('/modules/:id', (req, res) => {
 // =====================
 // This proxies requests to the production API, allowing the WebGL build
 // (which has hardcoded production URLs) to work with proper CORS
+app.get('/api/modules', async (req, res) => {
+  try {
+    const BASE_URL = `https://tfg-demo-project.onrender.com`;
+    const productionUrl = `${BASE_URL}/modules`;
+    
+    console.log(`🔄 Proxying request to: ${productionUrl}`);
+    
+    const response = await fetch(productionUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      return res.status(response.status).json({ success: false, message: "Failed to fetch modules" });
+    }
+    
+    const data = await response.json();
+    
+    // Return with proper CORS headers (already set by corsOptions middleware)
+    res.status(200).json(data);
+    
+  } catch (error) {
+    console.error('❌ Proxy error:', error.message);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Proxy request failed', 
+      error: error.message 
+    });
+  }
+});
+
+// Catch-all proxy for other /api/* paths
 app.get('/api/*', async (req, res) => {
   try {
     const path = req.path.replace('/api/', ''); // Remove /api/ prefix
     const BASE_URL = `https://tfg-demo-project.onrender.com`;
-const productionUrl = `${BASE_URL}/modules/${path}`;
+    const productionUrl = `${BASE_URL}/${path}`;
     
     console.log(`🔄 Proxying request to: ${productionUrl}`);
     
@@ -176,8 +210,6 @@ const productionUrl = `${BASE_URL}/modules/${path}`;
     });
     
     const data = await response.json();
-    
-    // Return with proper CORS headers (already set by corsOptions middleware)
     res.status(response.status).json(data);
     
   } catch (error) {
