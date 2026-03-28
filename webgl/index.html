@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Unity WebGL Player | Web_TFGPro</title>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <link rel="stylesheet" href="TemplateData/style.css">
+    <link rel="manifest" href="manifest.webmanifest">
+    <script src="TemplateData/ConvaiWebGLSDK.js"></script>
+  </head>
+  <body>
+    <div id="unity-container">
+      <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
+      <div id="unity-loading-bar">
+        <div id="unity-logo"></div>
+        <div id="unity-progress-bar-empty">
+          <div id="unity-progress-bar-full"></div>
+        </div>
+      </div>
+      <div id="unity-warning"> </div>
+    </div>
+   <script>
+// =====================
+// FETCH INTERCEPTOR - MUST be first!
+// =====================
+(function() {
+  const originalFetch = window.fetch;
+  window.fetch = function(resource, config) {
+    // If it's a string URL, check if it's from production
+    if (typeof resource === 'string') {
+      console.log('[FETCH INTERCEPTOR] Original URL:', resource);
+      
+      // Redirect production server to localhost
+      if (resource.includes('tfg.metaverse911.in')) {
+        const oldResource = resource;
+        resource = resource.replace(
+          'https://tfg.metaverse911.in/api',
+         
+        );
+        console.log('[FETCH INTERCEPTOR] Redirected from:', oldResource);
+        console.log('[FETCH INTERCEPTOR] Redirected to:', resource);
+      }
+    }
+    
+    // Call original fetch with modified URL
+    return originalFetch.call(this, resource, config);
+  };
+})();
+
+let unityInstanceGlobal = null;
+
+function getParam(key) {
+  return new URLSearchParams(window.location.search).get(key);
+}
+
+function unityShowBanner(msg, type) {
+  const warningBanner = document.querySelector("#unity-warning");
+  if (!warningBanner) return;
+
+  const div = document.createElement("div");
+  div.innerHTML = msg;
+  div.style = type === "error"
+    ? "background:red;padding:10px;"
+    : "background:yellow;padding:10px;";
+
+  warningBanner.appendChild(div);
+
+  if (type !== "error") {
+    setTimeout(() => {
+      if (warningBanner.contains(div)) {
+        warningBanner.removeChild(div);
+      }
+    }, 5000);
+  }
+}
+
+const buildUrl = "Build";
+const loaderUrl = buildUrl + "/TFG(20-02-2026).loader.js";
+
+const config = {
+  dataUrl: buildUrl + "/TFG(20-02-2026).data",
+  frameworkUrl: buildUrl + "/TFG(20-02-2026).framework.js",
+  codeUrl: buildUrl + "/TFG(20-02-2026).wasm",
+  streamingAssetsUrl: "StreamingAssets",
+  companyName: "DefaultCompany",
+  productName: "Web_TFGPro",
+  productVersion: "0.1.0",
+  showBanner: unityShowBanner,
+};
+
+const script = document.createElement("script");
+script.src = loaderUrl;
+
+script.onload = () => {
+  createUnityInstance(document.querySelector("#unity-canvas"), config, (progress) => {
+    document.querySelector("#unity-progress-bar-full").style.width = (progress * 100) + "%";
+  }).then((unityInstance) => {
+
+    unityInstanceGlobal = unityInstance;
+    console.log("✅ Unity Ready");
+
+    // =========================
+    // GET DATA FROM URL
+    // =========================
+    const token = getParam("token");
+    const name = getParam("name") || "Player";
+    const moduleId = getParam("moduleId");
+    const moduleIndex = getParam("module") ? parseInt(getParam("module")) : null;
+    const subIndex = getParam("sub") ? parseInt(getParam("sub")) : null;
+
+    console.log("👤 Name:", name);
+    console.log("🔑 Token:", token);
+    console.log("📦 ModuleId:", moduleId);
+
+    if (!token) {
+      console.warn("⚠️ No token found, stopping");
+      return;
+    }
+
+    const jsonData = JSON.stringify({
+      token: token,
+      name: name,
+      moduleId: moduleId
+    });
+
+    // =========================
+    // 🔥 SAFE SEND (RETRY)
+    // =========================
+    let attempts = 0;
+
+    const sendInterval = setInterval(() => {
+      attempts++;
+
+      try {
+        unityInstance.SendMessage(
+          "AppFlowManager",
+          "SetUserDataFromWebsite",
+          jsonData
+        );
+
+        console.log("🚀 Sent USER DATA:", jsonData);
+
+        // ---- AFTER USER DATA → LOAD MODULE ----
+        setTimeout(() => {
+
+          if (moduleId) {
+            unityInstance.SendMessage(
+              "AppFlowManager",
+              "OpenMainModuleById",
+              moduleId
+            );
+          } else if (moduleIndex !== null) {
+            unityInstance.SendMessage(
+              "AppFlowManager",
+              "OpenMainModuleFromWebsite",
+              moduleIndex
+            );
+          }
+
+          if (subIndex !== null) {
+            unityInstance.SendMessage(
+              "AppFlowManager",
+              "SetWebZoneIndex",
+              subIndex
+            );
+          }
+
+        }, 500);
+
+        clearInterval(sendInterval);
+
+      } catch (e) {
+        console.log("⏳ Retry sending... Attempt:", attempts);
+
+        if (attempts >= 5) {
+          clearInterval(sendInterval);
+          console.error("❌ Failed to send data to Unity");
+        }
+      }
+
+    }, 1000);
+
+  });
+};
+
+document.body.appendChild(script);
+</script>
+  </body>
+</html>
