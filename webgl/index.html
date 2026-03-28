@@ -34,10 +34,10 @@
      const prodDomain = 'tfg-demo-project.onrender.com';
 
 if (resource.includes(prodDomain)) {
-    const oldResource = resource;
+    // const oldResource = resource;
     const apiBase = window.location.origin + '/api';
     resource = resource.replace(`https://${prodDomain}/api`, apiBase);
-    console.log('[FETCH INTERCEPTOR] Redirected from:', oldResource);
+    // console.log('[FETCH INTERCEPTOR] Redirected from:', oldResource);
     console.log('[FETCH INTERCEPTOR] Redirected to:', resource);
 }
     }
