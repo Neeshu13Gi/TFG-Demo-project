@@ -24,30 +24,6 @@
 // =====================
 // FETCH INTERCEPTOR - MUST be first!
 // =====================
-(function() {
-  const originalFetch = window.fetch;
-  window.fetch = function(resource, config) {
-    // If it's a string URL, check if it's from production
-    if (typeof resource === 'string') {
-      console.log('[FETCH INTERCEPTOR] Original URL:', resource);
-      
-      // Redirect production server to current domain
-      if (resource.includes('tfg.metaverse911.in')) {
-        const oldResource = resource;
-        const apiBase = window.location.origin + '/api';
-        resource = resource.replace(
-          'https://tfg.metaverse911.in/api',
-          apiBase
-        );
-        console.log('[FETCH INTERCEPTOR] Redirected from:', oldResource);
-        console.log('[FETCH INTERCEPTOR] Redirected to:', resource);
-      }
-    }
-    
-    // Call original fetch with modified URL
-    return originalFetch.call(this, resource, config);
-  };
-})();
 
 let unityInstanceGlobal = null;
 
