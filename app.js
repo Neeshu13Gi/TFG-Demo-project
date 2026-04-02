@@ -7,6 +7,7 @@
 // CONFIGURATION
 // =====================
 const API_URL = 'https://tfg-demo-project.onrender.com';
+
 const TOKEN_KEY = 'authToken';
 const USER_KEY = 'currentUser';
 
