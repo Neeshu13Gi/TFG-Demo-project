@@ -140,6 +140,22 @@ app.post('/auth/login', (req, res) => {
 app.post('/auth/logout', (req, res) => res.status(200).json({ success: true, message: "Logged out successfully" }));
 
 // =====================
+// USER ENDPOINTS
+// =====================
+
+// GET CURRENT USER (/users/me)
+app.get('/users/me', (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return res.status(401).json({ success: false, message: "Authorization token required" });
+  
+  const user = users.find(u => u.token === token);
+  if (!user) return res.status(401).json({ success: false, message: "Invalid or expired token" });
+  
+  const { password: _, ...userResponse } = user;
+  res.status(200).json({ success: true, data: userResponse });
+});
+
+// =====================
 // MODULE ENDPOINTS (MATCH UNITY FORMAT)
 // =====================
 
