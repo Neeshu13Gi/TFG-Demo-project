@@ -106,6 +106,8 @@ script.onload = () => {
     // =========================
     const token = getParam("token");
     const name = getParam("name") || "";
+console.log("TOKEN VALUE:", token);
+
     const moduleId = getParam("moduleId");
     const moduleIndex = getParam("module") ? parseInt(getParam("module")) : null;
     const subIndex = getParam("sub") ? parseInt(getParam("sub")) : null;
@@ -121,7 +123,7 @@ script.onload = () => {
 
     const jsonData = JSON.stringify({
       token: token,
-      name: name,
+     name: name,
       moduleId: moduleId
     });
 
