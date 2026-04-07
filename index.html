@@ -16,6 +16,8 @@
             <div class="navbar-menu" id="navbarMenu">
                 <div class="user-info" id="userInfo" style="display: none;">
                     <span id="userName"></span>
+                    <button class="btn btn-nav" onclick="showDashboard()">Dashboard</button>
+                    <button class="btn btn-nav" onclick="showReports()">Reports</button>
                     <button class="btn btn-logout" onclick="logout()">Logout</button>
                 </div>
                 <div class="auth-links" id="authLinks">
@@ -115,6 +117,89 @@
                     <p>🎮 Unity WebGL content would load here</p>
                     <p id="moduleIdDisplay"></p>
                     <p style="font-size: 12px; color: #999;">Module ID: <code id="moduleIdCode"></code></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- REPORTS SECTION -->
+        <section id="reportsSection" class="reports-section" style="display: none;">
+            <h2>Training Reports</h2>
+            <button class="btn btn-back" onclick="showDashboard()">← Back to Dashboard</button>
+            <div id="reportsList" class="reports-grid">
+                <p style="text-align: center; padding: 40px;">No reports yet. Complete a training module to generate a report.</p>
+            </div>
+        </section>
+
+        <!-- REPORT DETAIL SECTION -->
+        <section id="reportDetailSection" class="report-detail" style="display: none;">
+            <button class="btn btn-back" onclick="showReports()">← Back to Reports</button>
+            <div class="report-container">
+                <div class="report-header">
+                    <h2 id="reportModuleTitle"></h2>
+                    <p id="reportDateTime" style="color: #666; font-size: 14px;"></p>
+                </div>
+
+                <div class="report-grid">
+                    <!-- Interaction Time -->
+                    <div class="report-card">
+                        <h4>Interaction Time</h4>
+                        <p id="reportInteractionTime" class="report-value"></p>
+                    </div>
+
+                    <!-- Overall Score -->
+                    <div class="report-card">
+                        <h4>Overall Score</h4>
+                        <p id="reportOverallScore" class="report-value" style="font-size: 32px; color: #4CAF50;"></p>
+                    </div>
+
+                    <!-- Speaking Pace -->
+                    <div class="report-card">
+                        <h4>Speaking Pace</h4>
+                        <p id="reportSpeakingPace" class="report-value"></p>
+                        <small id="reportSpeakingPaceRating"></small>
+                    </div>
+
+                    <!-- Filler Words -->
+                    <div class="report-card">
+                        <h4>Filler Words</h4>
+                        <p id="reportFillerWords" class="report-value"></p>
+                        <small id="reportFillerWordsRating"></small>
+                    </div>
+                </div>
+
+                <!-- Skills Section -->
+                <div class="skills-section">
+                    <h3>Skill Assessment</h3>
+                    <div class="skills-grid">
+                        <div class="skill-item">
+                            <label>Communication</label>
+                            <p id="reportSkillCommunication" class="skill-value"></p>
+                        </div>
+                        <div class="skill-item">
+                            <label>Problem Solving</label>
+                            <p id="reportSkillProblemSolving" class="skill-value"></p>
+                        </div>
+                        <div class="skill-item">
+                            <label>Clarity</label>
+                            <p id="reportSkillClarity" class="skill-value"></p>
+                        </div>
+                        <div class="skill-item">
+                            <label>Body Language</label>
+                            <p id="reportSkillBodyLanguage" class="skill-value"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transcript -->
+                <div class="transcript-section">
+                    <h3>Transcript</h3>
+                    <div id="reportTranscript" class="transcript-box"></div>
+                </div>
+
+                <!-- Feedback -->
+                <div class="feedback-section">
+                    <h3>Detailed Feedback</h3>
+                    <div id="reportFeedback" class="feedback-box"></div>
                 </div>
             </div>
         </section>

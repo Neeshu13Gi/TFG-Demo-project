@@ -42,6 +42,7 @@ app.use('/webgl', express.static('webgl'));
 // =====================
 let users = [];
 let employees = []; // Employee records for VR training
+let reports = []; // Training reports storage
 
 // =====================
 // MODULE DATA
@@ -172,6 +173,121 @@ app.get('/modules/:id', (req, res) => {
 });
 
 // =====================
+// REPORTS ENDPOINTS
+// =====================
+
+// POST - CREATE/SAVE REPORT
+app.post('/reports', (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ message: "Not authorized", stack: "Authorization token required" });
+    
+    const user = users.find(u => u.token === token);
+    if (!user) return res.status(401).json({ message: "Not authorized", stack: "Invalid or expired token" });
+
+    const { module, overallScore, interactionTime, speakingPace, fillerWords, skills, transcript, feedback } = req.body;
+    
+    // Validate required fields
+    if (!module || !overallScore || !interactionTime) {
+      return res.status(400).json({ message: "Missing required fields", stack: "module, overallScore, interactionTime required" });
+    }
+
+    // Find the module data
+    const moduleData = STATIC_MODULES.find(m => m._id === module);
+    if (!moduleData) {
+      return res.status(404).json({ message: "Module not found", stack: "Invalid module ID" });
+    }
+
+    // Create report object
+    const report = {
+      _id: generateId(),
+      user: user._id,
+      module: {
+        _id: moduleData._id,
+        title: moduleData.title,
+        thumbnailUrl: moduleData.thumbnailUrl || ""
+      },
+      overallScore: overallScore || "",
+      interactionTime: interactionTime || "",
+      speakingPace: speakingPace || { wpm: 0, rating: "" },
+      fillerWords: fillerWords || { count: 0, rating: "" },
+      skills: skills || {
+        communication: "",
+        problemSolving: "",
+        clarity: "",
+        bodyLanguage: ""
+      },
+      transcript: transcript || "",
+      feedback: feedback || "",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    reports.push(report);
+    res.status(201).json(report);
+  } catch (error) {
+    console.error('❌ Report creation error:', error);
+    res.status(500).json({ message: error.message, stack: error.stack });
+  }
+});
+
+// GET - RETRIEVE REPORT BY ID
+app.get('/reports/:id', (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ message: "Not authorized to view this report", stack: "Authorization token required" });
+    
+    const user = users.find(u => u.token === token);
+    if (!user) return res.status(401).json({ message: "Not authorized to view this report", stack: "Invalid or expired token" });
+
+    const report = reports.find(r => r._id === req.params.id);
+    if (!report) return res.status(404).json({ message: "Report not found", stack: "Report ID does not exist" });
+
+    // Check authorization - user can only view their own reports
+    if (report.user !== user._id) {
+      return res.status(401).json({ message: "Not authorized to view this report", stack: "You don't have permission to view this report" });
+    }
+
+    res.status(200).json(report);
+  } catch (error) {
+    console.error('❌ Report retrieval error:', error);
+    res.status(500).json({ message: error.message, stack: error.stack });
+  }
+});
+
+// GET - RETRIEVE ALL REPORTS FOR CURRENT USER
+app.get('/reports', (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    console.log('📊 GET /reports request');
+    console.log('   Authorization header:', authHeader ? authHeader.substring(0, 30) + '...' : 'MISSING');
+    
+    const token = authHeader?.replace('Bearer ', '');
+    if (!token) {
+      console.log('   ❌ No token found');
+      return res.status(401).json({ message: "Not authorized", stack: "Authorization token required" });
+    }
+    
+    console.log('   🔑 Token:', token.substring(0, 20) + '...');
+    console.log('   👥 Total users in system:', users.length);
+    
+    const user = users.find(u => u.token === token);
+    if (!user) {
+      console.log('   ❌ User not found for token');
+      return res.status(401).json({ message: "Not authorized", stack: "Invalid or expired token" });
+    }
+
+    console.log('   ✅ User found:', user.email);
+    const userReports = reports.filter(r => r.user === user._id);
+    console.log('   📋 Reports count:', userReports.length);
+    res.status(200).json({ success: true, data: userReports, count: userReports.length });
+  } catch (error) {
+    console.error('❌ Reports retrieval error:', error);
+    res.status(500).json({ message: error.message, stack: error.stack });
+  }
+});
+
+// =====================
 // API PROXY (for production server)
 // =====================
 // This proxies requests to the production API, allowing the WebGL build
@@ -242,17 +358,16 @@ app.get('/api/*', async (req, res) => {
 // HEALTH CHECK
 // =====================
 app.get('/health', (req, res) => res.status(200).json({ success: true, message: "API is running", timestamp: new Date().toISOString() }));
-// ✅ ROOT ROUTE (ADD THIS)
+
+// ✅ ROOT ROUTE
 app.get('/', (req, res) => {
   res.sendFile(path.resolve('index.html'));
 });
+
 // =====================
 // ERROR & 404 HANDLERS
 // =====================
 app.use((req, res) => res.status(404).json({ success: false, message: "Endpoint not found" }));
-app.get('/', (req, res) => {
-  res.sendFile(path.resolve('index.html'));
-});
 app.use((err, req, res, next) => res.status(500).json({ success: false, message: "Internal server error", error: err.message }));
 
 // =====================

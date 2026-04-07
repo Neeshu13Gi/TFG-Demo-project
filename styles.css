@@ -497,6 +497,240 @@ body {
 }
 
 /* =====================
+   REPORTS SECTION
+   ===================== */
+.reports-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-top: 2rem;
+}
+
+.reports-section h2 {
+    color: #667eea;
+    margin-bottom: 1.5rem;
+    font-size: 1.8rem;
+}
+
+.reports-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.report-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.report-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
+    border-color: #667eea;
+}
+
+.report-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
+
+.report-card-header h3 {
+    color: #333;
+    font-size: 1.1rem;
+    flex: 1;
+}
+
+.report-score {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 1.2rem;
+    white-space: nowrap;
+}
+
+.report-card-body p {
+    margin: 0.5rem 0;
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.report-card-body strong {
+    color: #333;
+}
+
+.report-skills {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.skill-badge {
+    background: #f0f0f0;
+    color: #667eea;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    border: 1px solid #e0e0e0;
+}
+
+/* =====================
+   REPORT DETAIL SECTION
+   ===================== */
+.report-detail {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-top: 2rem;
+}
+
+.report-container {
+    margin-top: 1.5rem;
+}
+
+.report-header {
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.report-header h2 {
+    color: #667eea;
+    margin-bottom: 0.5rem;
+}
+
+.report-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.report-card {
+    background: linear-gradient(135deg, #f5f7fa 0%, #faedcd 100%);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+}
+
+.report-card h4 {
+    color: #667eea;
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+}
+
+.report-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+}
+
+.report-detail .report-card small {
+    display: block;
+    color: #666;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+}
+
+/* Skills Section */
+.skills-section {
+    background: #f9f9f9;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.skills-section h3 {
+    color: #667eea;
+    margin-bottom: 1.5rem;
+}
+
+.skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.skill-item {
+    background: white;
+    padding: 1rem;
+    border-radius: 6px;
+    text-align: center;
+    border: 1px solid #e0e0e0;
+}
+
+.skill-item label {
+    display: block;
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.skill-value {
+    font-weight: bold;
+    color: #667eea;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+/* Transcript & Feedback Sections */
+.transcript-section,
+.feedback-section {
+    margin-bottom: 2rem;
+}
+
+.transcript-section h3,
+.feedback-section h3 {
+    color: #667eea;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.transcript-box,
+.feedback-box {
+    background: #f9f9f9;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+    line-height: 1.6;
+    color: #333;
+    max-height: 400px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.btn-nav {
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+}
+
+.btn-nav:hover {
+    background: #667eea;
+    color: white;
+}
+
+/* =====================
    RESPONSIVE
    ===================== */
 @media (max-width: 768px) {
@@ -510,6 +744,18 @@ body {
     }
 
     .module-info {
+        grid-template-columns: 1fr;
+    }
+
+    .reports-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .report-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .skills-grid {
         grid-template-columns: 1fr;
     }
 

@@ -6,7 +6,15 @@
 // =====================
 // CONFIGURATION
 // =====================
-const API_URL = 'https://tfg-demo-project.onrender.com';
+// Use localhost for development, production URL for deployed app
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? 'http://localhost:3000' 
+    : 'https://tfg-demo-project.onrender.com';
+
+console.log('%c🔌 API Configuration', 'color: #667eea; font-size: 14px; font-weight: bold;');
+console.log('   Hostname:', window.location.hostname);
+console.log('   API URL:', API_URL);
+console.log('   Environment:', API_URL.includes('localhost') ? 'DEVELOPMENT ✅' : 'PRODUCTION ⚠️');
 
 const TOKEN_KEY = 'authToken';
 const USER_KEY = 'currentUser';
@@ -28,9 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedToken = localStorage.getItem(TOKEN_KEY);
     const savedUser = localStorage.getItem(USER_KEY);
     
+    console.log('📦 On initialization:');
+    console.log('  - Saved Token exists:', !!savedToken);
+    console.log('  - Saved User exists:', !!savedUser);
+    
     if (savedToken && savedUser) {
         currentUser = JSON.parse(savedUser);
-        console.log('✅ User restored from localStorage:', currentUser.email);
+        console.log('✅ User restored from localStorage:', currentUser.email, currentUser.token?.substring(0, 20));
         showDashboard();
     } else {
         console.log('📝 No active session. Showing auth screen.');
@@ -68,6 +80,8 @@ function showDashboard() {
     document.getElementById('authSection').style.display = 'none';
     document.getElementById('modulesSection').style.display = 'block';
     document.getElementById('moduleDetailSection').style.display = 'none';
+    document.getElementById('reportsSection').style.display = 'none';
+    document.getElementById('reportDetailSection').style.display = 'none';
     
     // Update navbar
     document.getElementById('authLinks').style.display = 'none';
@@ -440,6 +454,200 @@ function launchUnityWebGL() {
     `;
     
     document.getElementById('unityContainer').style.display = 'block';
+}
+
+// =====================
+// REPORT SAVING
+// =====================
+async function saveReport(reportData) {
+    try {
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (!token) {
+            showToast('❌ Not authenticated. Please login first.', 'error');
+            return null;
+        }
+
+        console.log('💾 Saving report:', reportData);
+
+        const response = await fetch(`${API_URL}/reports`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(reportData)
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            console.error('❌ Report save error:', error);
+            showToast(`❌ Failed to save report: ${error.message}`, 'error');
+            return null;
+        }
+
+        const savedReport = await response.json();
+        console.log('✅ Report saved successfully:', savedReport);
+        showToast('✅ Report saved successfully!', 'success');
+        return savedReport;
+    } catch (error) {
+        console.error('❌ Report save exception:', error);
+        showToast(`❌ Error saving report: ${error.message}`, 'error');
+        return null;
+    }
+}
+
+// Get user's reports
+async function getUserReports() {
+    try {
+        const token = localStorage.getItem(TOKEN_KEY);
+        console.log('🔑 TOKEN_KEY:', TOKEN_KEY);
+        console.log('🔑 Token from localStorage:', token ? token.substring(0, 20) + '...' : 'NONE');
+        
+        if (!token) {
+            console.warn('⚠️ Not authenticated. Cannot fetch reports.');
+            showToast('⚠️ No auth token found. Please login again.', 'error');
+            return [];
+        }
+
+        console.log('📤 Sending GET /reports with token');
+        const response = await fetch(`${API_URL}/reports`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        console.log('📥 Response status:', response.status);
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('❌ Failed to fetch reports:', errorData);
+            showToast(`❌ Failed to load reports: ${errorData.message}`, 'error');
+            return [];
+        }
+
+        const data = await response.json();
+        console.log('✅ Reports fetched:', data);
+        return data.data || [];
+    } catch (error) {
+        console.error('❌ Error fetching reports:', error);
+        showToast(`❌ Error: ${error.message}`, 'error');
+        return [];
+    }
+}
+
+// Get specific report by ID
+async function getReportById(reportId) {
+    try {
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (!token) {
+            console.warn('⚠️ Not authenticated. Cannot fetch report.');
+            return null;
+        }
+
+        const response = await fetch(`${API_URL}/reports/${reportId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            console.error('❌ Failed to fetch report');
+            return null;
+        }
+
+        const report = await response.json();
+        console.log('✅ Report fetched:', report);
+        return report;
+    } catch (error) {
+        console.error('❌ Error fetching report:', error);
+        return null;
+    }
+}
+
+// =====================
+// REPORTS UI SECTION
+// =====================
+async function showReports() {
+    console.log('📊 Showing reports section');
+    console.log('🔐 Current user:', currentUser);
+    console.log('🔐 Token in localStorage:', localStorage.getItem(TOKEN_KEY) ? 'EXISTS' : 'MISSING');
+    
+    document.getElementById('authSection').style.display = 'none';
+    document.getElementById('modulesSection').style.display = 'none';
+    document.getElementById('moduleDetailSection').style.display = 'none';
+    document.getElementById('reportsSection').style.display = 'block';
+    document.getElementById('reportDetailSection').style.display = 'none';
+
+    // Update navbar
+    document.getElementById('authLinks').style.display = 'none';
+    document.getElementById('userInfo').style.display = 'flex';
+
+    showLoading(true);
+    const reports = await getUserReports();
+    showLoading(false);
+
+    const reportsList = document.getElementById('reportsList');
+    
+    if (!reports || reports.length === 0) {
+        reportsList.innerHTML = '<p style="text-align: center; padding: 40px;">No reports yet. Complete a training module to generate a report.</p>';
+        return;
+    }
+
+    reportsList.innerHTML = reports.map(report => `
+        <div class="report-card" onclick="showReportDetail('${report._id}')">
+            <div class="report-card-header">
+                <h3>${report.module.title}</h3>
+                <span class="report-score">${report.overallScore}</span>
+            </div>
+            <div class="report-card-body">
+                <p><strong>Interaction Time:</strong> ${report.interactionTime}</p>
+                <p><strong>Date:</strong> ${new Date(report.createdAt).toLocaleDateString()}</p>
+                <div class="report-skills">
+                    <span class="skill-badge">${report.skills.communication}</span>
+                    <span class="skill-badge">${report.skills.clarity}</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function showReportDetail(reportId) {
+    console.log(`📋 Showing report detail: ${reportId}`);
+    document.getElementById('reportsSection').style.display = 'none';
+    document.getElementById('reportDetailSection').style.display = 'block';
+
+    showLoading(true);
+    const report = await getReportById(reportId);
+    showLoading(false);
+
+    if (!report) {
+        showToast('❌ Failed to load report', 'error');
+        showReports();
+        return;
+    }
+
+    // Populate report details
+    document.getElementById('reportModuleTitle').textContent = report.module.title;
+    document.getElementById('reportDateTime').textContent = new Date(report.createdAt).toLocaleString();
+    document.getElementById('reportInteractionTime').textContent = report.interactionTime;
+    document.getElementById('reportOverallScore').textContent = report.overallScore;
+    document.getElementById('reportSpeakingPace').textContent = `${report.speakingPace.wpm} WPM`;
+    document.getElementById('reportSpeakingPaceRating').textContent = report.speakingPace.rating;
+    document.getElementById('reportFillerWords').textContent = `${report.fillerWords.count} words`;
+    document.getElementById('reportFillerWordsRating').textContent = report.fillerWords.rating;
+
+    // Skills
+    document.getElementById('reportSkillCommunication').textContent = report.skills.communication;
+    document.getElementById('reportSkillProblemSolving').textContent = report.skills.problemSolving;
+    document.getElementById('reportSkillClarity').textContent = report.skills.clarity;
+    document.getElementById('reportSkillBodyLanguage').textContent = report.skills.bodyLanguage;
+
+    // Transcript and Feedback
+    document.getElementById('reportTranscript').textContent = report.transcript || 'No transcript available';
+    document.getElementById('reportFeedback').textContent = report.feedback || 'No feedback available';
 }
 
 // =====================
