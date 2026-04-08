@@ -1,6 +1,13 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import dotenv from 'dotenv';
+
+// =====================
+// ENVIRONMENT SETUP
+// =====================
+dotenv.config(); // Load variables from .env file
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -358,6 +365,79 @@ app.get('/api/*', async (req, res) => {
 // HEALTH CHECK
 // =====================
 app.get('/health', (req, res) => res.status(200).json({ success: true, message: "API is running", timestamp: new Date().toISOString() }));
+
+// =====================
+// GEMINI API ENDPOINT (Secure with API Key)
+// =====================
+app.post('/api/generate', async (req, res) => {
+  try {
+    // Check if API key exists
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.error('❌ GEMINI_API_KEY not found in environment variables');
+      return res.status(500).json({ 
+        success: false, 
+        message: "API key not configured on server. Contact administrator." 
+      });
+    }
+
+    // Validate request body
+    const { prompt, contents } = req.body;
+    if (!prompt && !contents) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Please provide 'prompt' or 'contents' in request body" 
+      });
+    }
+
+    // Prepare request body for Gemini API
+    const requestBody = {
+      contents: contents || [{
+        parts: [{
+          text: prompt
+        }]
+      }]
+    };
+
+    // Call Gemini API with secure key from .env
+    const response = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey  // API key loaded from .env, NOT exposed in code
+        },
+        body: JSON.stringify(requestBody)
+      }
+    );
+
+    // Handle Gemini API response
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('❌ Gemini API error:', errorData);
+      return res.status(response.status).json({ 
+        success: false, 
+        message: "Gemini API error",
+        error: errorData 
+      });
+    }
+
+    const data = await response.json();
+    res.status(200).json({ 
+      success: true, 
+      data: data 
+    });
+
+  } catch (error) {
+    console.error('❌ API Generation error:', error.message);
+    res.status(500).json({ 
+      success: false, 
+      message: "Internal server error",
+      error: error.message 
+    });
+  }
+});
 
 // ✅ ROOT ROUTE
 app.get('/', (req, res) => {
