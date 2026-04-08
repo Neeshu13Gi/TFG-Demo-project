@@ -400,26 +400,35 @@ app.post('/api/generate', async (req, res) => {
     };
 
     // Call Gemini API with secure key from .env
+    console.log('🔑 API Key present:', !!apiKey);
+    console.log('🔑 API Key length:', apiKey?.length);
+    console.log('🔑 API Key starts with:', apiKey?.substring(0, 10) + '...');
+    
     const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey,
       {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey  // API key loaded from .env, NOT exposed in code
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(requestBody)
       }
     );
 
+    console.log('📊 Gemini API Response Status:', response.status);
+    
     // Handle Gemini API response
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('❌ Gemini API error:', errorData);
+      const errorData = await response.json().catch(() => ({}));
+      console.error('❌ Gemini API error (Status ' + response.status + '):', errorData);
       return res.status(response.status).json({ 
         success: false, 
-        message: "Gemini API error",
-        error: errorData 
+        message: "Gemini API error (Status " + response.status + ")",
+        error: errorData,
+        debug: {
+          apiKeyValid: apiKey && apiKey !== 'your_secret_gemini_api_key_here',
+          apiKeyLength: apiKey?.length
+        }
       });
     }
 
