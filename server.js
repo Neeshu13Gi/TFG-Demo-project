@@ -47,7 +47,18 @@ app.use('/webgl', express.static('webgl'));
 // =====================
 // IN-MEMORY STORAGE
 // =====================
-let users = [];
+// Pre-populate with a test user for development
+let users = [
+  { 
+    _id: 'test_user_001', 
+    name: 'Test User', 
+    email: 'test@example.com', 
+    password: 'test123', 
+    avatarUrl: '', 
+    role: 'user', 
+    token: 'PERSISTENT_TEST_TOKEN_001' 
+  }
+];
 let employees = []; // Employee records for VR training
 let reports = []; // Training reports storage
 
@@ -137,8 +148,22 @@ app.post('/auth/register', (req, res) => {
 app.post('/auth/login', (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ success: false, message: "Email and password required" });
-  const user = users.find(u => u.email === email && u.password === password);
-  if (!user) return res.status(401).json({ success: false, message: "Invalid email or password" });
+  
+  let user = users.find(u => u.email === email && u.password === password);
+  
+  // Auto-create user on first login (for development/demo)
+  if (!user) {
+    user = { 
+      _id: generateId(), 
+      name: email.split('@')[0], 
+      email, 
+      password, 
+      avatarUrl: '', 
+      role: 'user', 
+      token: null 
+    };
+    users.push(user);
+  }
 
   user.token = generateToken();
   const { password: _, ...userResponse } = user;
