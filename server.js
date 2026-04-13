@@ -91,6 +91,24 @@ const loadReportsFromDisk = () => {
   }
 };
 
+const persistReportToDisk = (report) => {
+  try {
+    const reportsDir = path.join(path.resolve(), 'reports');
+    if (!fs.existsSync(reportsDir)) {
+      fs.mkdirSync(reportsDir, { recursive: true });
+    }
+
+    const safeTitle = (report?.module?.title || 'Report').replace(/[^a-zA-Z0-9-_]/g, '_');
+    const filename = `${safeTitle}_${report._id}.json`;
+    const filePath = path.join(reportsDir, filename);
+    fs.writeFileSync(filePath, JSON.stringify(report, null, 2), 'utf8');
+    return filename;
+  } catch (e) {
+    console.warn(`⚠️ Could not save report to file: ${e.message}`);
+    return null;
+  }
+};
+
 // =====================
 // MODULE DATA
 // =====================
@@ -318,20 +336,8 @@ app.post('/reports', (req, res) => {
     reports.push(report);
     
     // ALSO SAVE TO LOCAL FILE (NEW!)
-    try {
-      const reportsDir = path.join(path.resolve(), 'reports');
-      if (!fs.existsSync(reportsDir)) {
-        fs.mkdirSync(reportsDir, { recursive: true });
-      }
-      
-      const filename = `${report.module.title.replace(/[^a-zA-Z0-9-_]/g, '_')}_${report._id}.json`;
-      const filePath = path.join(reportsDir, filename);
-      fs.writeFileSync(filePath, JSON.stringify(report, null, 2), 'utf8');
-      
-      console.log(`✅ Report saved to file: ${filename}`);
-    } catch (fileError) {
-      console.warn(`⚠️ Could not save report to file: ${fileError.message}`);
-    }
+    const savedFilename = persistReportToDisk(report);
+    if (savedFilename) console.log(`✅ Report saved to file: ${savedFilename}`);
     
     res.status(201).json(report);
   } catch (error) {
@@ -387,7 +393,43 @@ app.get('/reports', (req, res) => {
     }
 
     console.log('   ✅ User found:', user.email);
-    const userReports = reports.filter(r => r.user === user._id || r.userToken === token);
+    let userReports = reports.filter(r => r.user === user._id || r.userToken === token);
+
+    // Demo UX: if user has no reports yet, create one dummy report once.
+    if (userReports.length === 0) {
+      const moduleData = STATIC_MODULES[0];
+      const now = new Date().toISOString();
+      const dummy = {
+        _id: generateId(),
+        user: user._id,
+        userToken: token,
+        module: {
+          _id: moduleData._id,
+          title: moduleData.title,
+          thumbnailUrl: moduleData.thumbnailUrl || ""
+        },
+        overallScore: "4.2",
+        interactionTime: "2 min 10 sec",
+        speakingPace: { wpm: 118, rating: "Good" },
+        fillerWords: { count: 3, rating: "Good" },
+        skills: {
+          communication: "Intermediate",
+          problemSolving: "Novice",
+          clarity: "Intermediate",
+          bodyLanguage: "Novice"
+        },
+        transcript: "Demo report: complete a module to generate real data.",
+        feedback: "This is a sample report shown when you have no saved reports yet.",
+        createdAt: now,
+        updatedAt: now,
+        isDummy: true
+      };
+
+      reports.push(dummy);
+      const savedFilename = persistReportToDisk(dummy);
+      if (savedFilename) console.log(`🧪 Dummy report saved to file: ${savedFilename}`);
+      userReports = [dummy];
+    }
     console.log('   📋 Reports count:', userReports.length);
     res.status(200).json({ success: true, data: userReports, count: userReports.length });
   } catch (error) {
