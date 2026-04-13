@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import dotenv from 'dotenv';
+import fs from 'fs';
 
 // =====================
 // ENVIRONMENT SETUP
@@ -61,6 +62,34 @@ let users = [
 ];
 let employees = []; // Employee records for VR training
 let reports = []; // Training reports storage
+
+const loadReportsFromDisk = () => {
+  try {
+    const reportsDir = path.join(path.resolve(), 'reports');
+    if (!fs.existsSync(reportsDir)) return;
+
+    const files = fs.readdirSync(reportsDir).filter(f => f.toLowerCase().endsWith('.json'));
+    const loaded = [];
+
+    for (const file of files) {
+      try {
+        const raw = fs.readFileSync(path.join(reportsDir, file), 'utf8');
+        const obj = JSON.parse(raw);
+        if (obj && obj._id) loaded.push(obj);
+      } catch {
+        // ignore invalid json files
+      }
+    }
+
+    // Deduplicate by _id, prefer newest (disk)
+    const byId = new Map();
+    for (const r of [...reports, ...loaded]) byId.set(r._id, r);
+    reports = Array.from(byId.values());
+    console.log(`📦 Loaded reports from disk: ${loaded.length} (total in memory: ${reports.length})`);
+  } catch (e) {
+    console.warn(`⚠️ Failed loading reports from disk: ${e.message}`);
+  }
+};
 
 // =====================
 // MODULE DATA
@@ -130,6 +159,36 @@ const generateId = () => Math.random().toString(36).substr(2, 9);
 const generateToken = () => `DUMMY_TOKEN_${Date.now()}_${Math.random().toString(36).substring(2,10).toUpperCase()}`;
 const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
+const extractAuthToken = (authHeader) => {
+  if (!authHeader || typeof authHeader !== 'string') return null;
+  // Common formats: "Bearer <token>", "bearer <token>", "<token>"
+  const trimmed = authHeader.trim();
+  return trimmed.replace(/^bearer\s+/i, '').trim() || null;
+};
+
+const getOrCreateUserByToken = (token) => {
+  if (!token) return null;
+  let user = users.find(u => u.token === token);
+  if (user) return user;
+
+  // Demo-friendly behavior:
+  // Unity WebGL may send reports after a cold start or across instances.
+  // If a token is present but unknown, treat it as a valid session identity
+  // and materialize a user record so report saving doesn't 401.
+  const short = token.substring(0, 12).replace(/[^a-zA-Z0-9]/g, '');
+  user = {
+    _id: generateId(),
+    name: 'WebGL User',
+    email: `webgl_${short}@demo.local`,
+    password: '',
+    avatarUrl: '',
+    role: 'user',
+    token
+  };
+  users.push(user);
+  return user;
+};
+
 // =====================
 // AUTH ENDPOINTS
 // =====================
@@ -178,10 +237,10 @@ app.post('/auth/logout', (req, res) => res.status(200).json({ success: true, mes
 
 // GET CURRENT USER (/users/me)
 app.get('/users/me', (req, res) => {
-  const token = req.headers.authorization?.replace('Bearer ', '');
+  const token = extractAuthToken(req.headers.authorization);
   if (!token) return res.status(401).json({ success: false, message: "Authorization token required" });
   
-  const user = users.find(u => u.token === token);
+  const user = getOrCreateUserByToken(token);
   if (!user) return res.status(401).json({ success: false, message: "Invalid or expired token" });
   
   const { password: _, ...userResponse } = user;
@@ -211,10 +270,10 @@ app.get('/modules/:id', (req, res) => {
 // POST - CREATE/SAVE REPORT
 app.post('/reports', (req, res) => {
   try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+    const token = extractAuthToken(req.headers.authorization);
     if (!token) return res.status(401).json({ message: "Not authorized", stack: "Authorization token required" });
     
-    const user = users.find(u => u.token === token);
+    const user = getOrCreateUserByToken(token);
     if (!user) return res.status(401).json({ message: "Not authorized", stack: "Invalid or expired token" });
 
     const { module, overallScore, interactionTime, speakingPace, fillerWords, skills, transcript, feedback } = req.body;
@@ -234,6 +293,7 @@ app.post('/reports', (req, res) => {
     const report = {
       _id: generateId(),
       user: user._id,
+      userToken: token,
       module: {
         _id: moduleData._id,
         title: moduleData.title,
@@ -256,6 +316,23 @@ app.post('/reports', (req, res) => {
     };
 
     reports.push(report);
+    
+    // ALSO SAVE TO LOCAL FILE (NEW!)
+    try {
+      const reportsDir = path.join(path.resolve(), 'reports');
+      if (!fs.existsSync(reportsDir)) {
+        fs.mkdirSync(reportsDir, { recursive: true });
+      }
+      
+      const filename = `${report.module.title.replace(/[^a-zA-Z0-9-_]/g, '_')}_${report._id}.json`;
+      const filePath = path.join(reportsDir, filename);
+      fs.writeFileSync(filePath, JSON.stringify(report, null, 2), 'utf8');
+      
+      console.log(`✅ Report saved to file: ${filename}`);
+    } catch (fileError) {
+      console.warn(`⚠️ Could not save report to file: ${fileError.message}`);
+    }
+    
     res.status(201).json(report);
   } catch (error) {
     console.error('❌ Report creation error:', error);
@@ -266,10 +343,10 @@ app.post('/reports', (req, res) => {
 // GET - RETRIEVE REPORT BY ID
 app.get('/reports/:id', (req, res) => {
   try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+    const token = extractAuthToken(req.headers.authorization);
     if (!token) return res.status(401).json({ message: "Not authorized to view this report", stack: "Authorization token required" });
     
-    const user = users.find(u => u.token === token);
+    const user = getOrCreateUserByToken(token);
     if (!user) return res.status(401).json({ message: "Not authorized to view this report", stack: "Invalid or expired token" });
 
     const report = reports.find(r => r._id === req.params.id);
@@ -294,7 +371,7 @@ app.get('/reports', (req, res) => {
     console.log('📊 GET /reports request');
     console.log('   Authorization header:', authHeader ? authHeader.substring(0, 30) + '...' : 'MISSING');
     
-    const token = authHeader?.replace('Bearer ', '');
+    const token = extractAuthToken(authHeader);
     if (!token) {
       console.log('   ❌ No token found');
       return res.status(401).json({ message: "Not authorized", stack: "Authorization token required" });
@@ -303,14 +380,14 @@ app.get('/reports', (req, res) => {
     console.log('   🔑 Token:', token.substring(0, 20) + '...');
     console.log('   👥 Total users in system:', users.length);
     
-    const user = users.find(u => u.token === token);
+    const user = getOrCreateUserByToken(token);
     if (!user) {
       console.log('   ❌ User not found for token');
       return res.status(401).json({ message: "Not authorized", stack: "Invalid or expired token" });
     }
 
     console.log('   ✅ User found:', user.email);
-    const userReports = reports.filter(r => r.user === user._id);
+    const userReports = reports.filter(r => r.user === user._id || r.userToken === token);
     console.log('   📋 Reports count:', userReports.length);
     res.status(200).json({ success: true, data: userReports, count: userReports.length });
   } catch (error) {
@@ -357,6 +434,90 @@ app.get('/api/modules', async (req, res) => {
   }
 });
 
+// =====================
+// LIST ALL REPORTS (BEFORE CATCH-ALL)
+// =====================
+app.get('/api/reports', (req, res) => {
+  try {
+    const reportsDir = path.join(path.resolve(), 'reports');
+    
+    if (!fs.existsSync(reportsDir)) {
+      return res.status(200).json({ 
+        success: true, 
+        reports: [],
+        message: "No reports yet"
+      });
+    }
+
+    const files = fs.readdirSync(reportsDir);
+    const reports = files.map(file => {
+      const filePath = path.join(reportsDir, file);
+      const stats = fs.statSync(filePath);
+      return {
+        filename: file,
+        size: stats.size,
+        created: stats.birthtime,
+        modified: stats.mtime
+      };
+    });
+
+    res.status(200).json({ 
+      success: true, 
+      reports: reports.sort((a, b) => b.modified - a.modified),
+      count: reports.length
+    });
+
+  } catch (error) {
+    console.error('❌ Error listing reports:', error.message);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to list reports",
+      error: error.message 
+    });
+  }
+});
+
+// =====================
+// GET SPECIFIC REPORT (BEFORE CATCH-ALL)
+// =====================
+app.get('/api/reports/:filename', (req, res) => {
+  try {
+    const filename = req.params.filename;
+    const filePath = path.join(path.resolve(), 'reports', filename);
+    
+    // Security: prevent directory traversal
+    if (!filePath.startsWith(path.join(path.resolve(), 'reports'))) {
+      return res.status(403).json({ 
+        success: false, 
+        message: "Access denied"
+      });
+    }
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Report not found"
+      });
+    }
+
+    const content = fs.readFileSync(filePath, 'utf8');
+    res.status(200).json({ 
+      success: true, 
+      filename: filename,
+      content: content,
+      size: fs.statSync(filePath).size
+    });
+
+  } catch (error) {
+    console.error('❌ Error reading report:', error.message);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to read report",
+      error: error.message 
+    });
+  }
+});
+
 // Catch-all proxy for other /api/* paths
 app.get('/api/*', async (req, res) => {
   try {
@@ -392,85 +553,284 @@ app.get('/api/*', async (req, res) => {
 app.get('/health', (req, res) => res.status(200).json({ success: true, message: "API is running", timestamp: new Date().toISOString() }));
 
 // =====================
-// GEMINI API ENDPOINT (Secure with API Key)
+// REPORT SAVING ENDPOINT (Local - No Deploy Needed)
 // =====================
-app.post('/api/generate', async (req, res) => {
+app.post('/api/save-report', async (req, res) => {
   try {
-    // Check if API key exists
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      console.error('❌ GEMINI_API_KEY not found in environment variables');
-      return res.status(500).json({ 
-        success: false, 
-        message: "API key not configured on server. Contact administrator." 
-      });
-    }
-
-    // Validate request body
-    const { prompt, contents } = req.body;
-    if (!prompt && !contents) {
+    const { filename, content, format } = req.body;
+    
+    if (!filename || !content) {
       return res.status(400).json({ 
         success: false, 
-        message: "Please provide 'prompt' or 'contents' in request body" 
+        message: "filename and content are required" 
       });
     }
 
-    // Prepare request body for Gemini API
-    const requestBody = {
-      contents: contents || [{
-        parts: [{
-          text: prompt
-        }]
-      }]
-    };
-
-    // Call Gemini API with secure key from .env
-    console.log('🔑 API Key present:', !!apiKey);
-    console.log('🔑 API Key length:', apiKey?.length);
-    console.log('🔑 API Key starts with:', apiKey?.substring(0, 10) + '...');
+    // Sanitize filename
+    const sanitized = filename.replace(/[^a-zA-Z0-9-_\.]/g, '_');
+    const ext = format === 'json' ? '.json' : '.md';
+    const fullFilename = `${sanitized}${ext}`;
+    const filePath = path.join(path.resolve(), 'reports', fullFilename);
     
-    const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
-      }
-    );
-
-    console.log('📊 Gemini API Response Status:', response.status);
-    
-    // Handle Gemini API response
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('❌ Gemini API error (Status ' + response.status + '):', errorData);
-      return res.status(response.status).json({ 
-        success: false, 
-        message: "Gemini API error (Status " + response.status + ")",
-        error: errorData,
-        debug: {
-          apiKeyValid: apiKey && apiKey !== 'your_secret_gemini_api_key_here',
-          apiKeyLength: apiKey?.length
-        }
-      });
+    // Create reports directory if it doesn't exist
+    const reportsDir = path.join(path.resolve(), 'reports');
+    if (!fs.existsSync(reportsDir)) {
+      fs.mkdirSync(reportsDir, { recursive: true });
     }
 
-    const data = await response.json();
+    // Save report locally
+    fs.writeFileSync(filePath, content, 'utf8');
+    
+    console.log(`✅ Report saved: ${fullFilename}`);
+    
     res.status(200).json({ 
       success: true, 
-      data: data 
+      message: "Report saved locally",
+      filename: fullFilename,
+      path: filePath,
+      timestamp: new Date().toISOString()
     });
 
   } catch (error) {
-    console.error('❌ API Generation error:', error.message);
+    console.error('❌ Report save error:', error.message);
     res.status(500).json({ 
       success: false, 
-      message: "Internal server error",
+      message: "Failed to save report",
       error: error.message 
     });
   }
+});
+
+// =====================
+// REPORTS DASHBOARD
+// =====================
+app.get('/reports-dashboard', (req, res) => {
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { 
+      max-width: 900px; 
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+    .header h1 { font-size: 2em; margin-bottom: 10px; }
+    .header p { opacity: 0.9; }
+    .content { padding: 30px; }
+    .report-list { list-style: none; }
+    .report-item {
+      background: #f8f9fa;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .report-item:hover {
+      background: #e9ecef;
+      transform: translateX(5px);
+    }
+    .report-info { flex: 1; }
+    .report-name { font-weight: bold; color: #333; margin-bottom: 5px; }
+    .report-meta { font-size: 0.85em; color: #666; }
+    .report-actions {
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9em;
+      transition: all 0.3s ease;
+    }
+    .btn-view {
+      background: #667eea;
+      color: white;
+    }
+    .btn-view:hover { background: #5568d3; }
+    .btn-download {
+      background: #28a745;
+      color: white;
+    }
+    .btn-download:hover { background: #218838; }
+    .btn-delete {
+      background: #dc3545;
+      color: white;
+    }
+    .btn-delete:hover { background: #c82333; }
+    .empty {
+      text-align: center;
+      color: #999;
+      padding: 40px;
+      font-size: 1.1em;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+      background-color: white;
+      margin: 10% auto;
+      padding: 25px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 700px;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    .modal-close {
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #999;
+    }
+    .modal-close:hover { color: #000; }
+    .modal-title { font-size: 1.5em; margin-bottom: 15px; color: #333; }
+    .report-content {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 0.9em;
+      line-height: 1.5;
+    }
+    .loading { text-align: center; padding: 20px; color: #666; }
+    .error { color: #dc3545; padding: 15px; background: #f8d7da; border-radius: 6px; margin-bottom: 15px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📊 Reports Dashboard</h1>
+      <p>All saved reports from your local server</p>
+    </div>
+    <div class="content">
+      <div id="error-box"></div>
+      <div id="reports-container" class="loading">Loading reports...</div>
+    </div>
+  </div>
+
+  <div id="reportModal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close">&times;</span>
+      <div class="modal-title" id="modalTitle"></div>
+      <div class="report-content" id="modalContent"></div>
+    </div>
+  </div>
+
+  <script>
+    const modal = document.getElementById('reportModal');
+    const closeBtn = document.querySelector('.modal-close');
+    
+    closeBtn.onclick = () => modal.style.display = 'none';
+    window.onclick = (event) => {
+      if (event.target == modal) modal.style.display = 'none';
+    };
+
+    function loadReports() {
+      const container = document.getElementById('reports-container');
+      const errorBox = document.getElementById('error-box');
+      errorBox.innerHTML = '';
+
+      fetch('/api/reports')
+        .then(res => res.json())
+        .then(data => {
+          if (!data.success || data.reports.length === 0) {
+            container.innerHTML = '<div class="empty">📭 No reports yet</div>';
+            return;
+          }
+
+          let html = '<ul class="report-list">';
+          data.reports.forEach(report => {
+            const date = new Date(report.modified).toLocaleString();
+            const sizeKB = (report.size / 1024).toFixed(2);
+            html += \`
+              <li class="report-item">
+                <div class="report-info">
+                  <div class="report-name">📄 \${report.filename}</div>
+                  <div class="report-meta">Modified: \${date} | Size: \${sizeKB} KB</div>
+                </div>
+                <div class="report-actions">
+                  <button class="btn-view" onclick="viewReport('\${report.filename}')">View</button>
+                  <button class="btn-download" onclick="downloadReport('\${report.filename}')">Download</button>
+                </div>
+              </li>
+            \`;
+          });
+          html += '</ul>';
+          container.innerHTML = html;
+        })
+        .catch(err => {
+          errorBox.innerHTML = \`<div class="error">❌ Error loading reports: \${err.message}</div>\`;
+          container.innerHTML = '';
+        });
+    }
+
+    function viewReport(filename) {
+      fetch(\`/api/reports/\${filename}\`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            document.getElementById('modalTitle').textContent = '📋 ' + filename;
+            document.getElementById('modalContent').textContent = data.content;
+            modal.style.display = 'block';
+          }
+        })
+        .catch(err => alert('Error loading report: ' + err.message));
+    }
+
+    function downloadReport(filename) {
+      const link = document.createElement('a');
+      link.href = \`/api/reports/\${filename}\`;
+      link.download = filename;
+      link.click();
+    }
+
+    // Load reports on page load
+    loadReports();
+    
+    // Refresh every 5 seconds
+    setInterval(loadReports, 5000);
+  </script>
+</body>
+</html>
+  `;
+  res.send(html);
 });
 
 // ✅ ROOT ROUTE
@@ -487,6 +847,7 @@ app.use((err, req, res, next) => res.status(500).json({ success: false, message:
 // =====================
 // START SERVER
 // =====================
+loadReportsFromDisk();
 app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
 
 export default app;
