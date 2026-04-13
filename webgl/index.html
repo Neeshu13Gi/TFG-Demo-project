@@ -23,6 +23,48 @@
    <script>
 // =====================
 // FETCH INTERCEPTOR - MUST be first!
+// When running locally, Unity may still call the production API URL.
+// Rewrite production origin to same-origin so reports save locally.
+
+(() => {
+  const isLocalHost =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1" ||
+    window.location.hostname === "0.0.0.0";
+
+  if (!isLocalHost) return;
+
+  const PROD_ORIGIN = "https://tfg-demo-project.onrender.com";
+
+  const rewriteUrl = (input) => {
+    try {
+      const urlStr = typeof input === "string" ? input : input?.url;
+      if (!urlStr || typeof urlStr !== "string") return input;
+      if (!urlStr.startsWith(PROD_ORIGIN)) return input;
+      return urlStr.replace(PROD_ORIGIN, window.location.origin);
+    } catch {
+      return input;
+    }
+  };
+
+  const originalFetch = window.fetch?.bind(window);
+  if (originalFetch) {
+    window.fetch = (input, init) => originalFetch(rewriteUrl(input), init);
+  }
+
+  const OriginalXHR = window.XMLHttpRequest;
+  if (OriginalXHR) {
+    function PatchedXHR() {
+      const xhr = new OriginalXHR();
+      const originalOpen = xhr.open;
+      xhr.open = function (method, url, ...rest) {
+        return originalOpen.call(this, method, rewriteUrl(url), ...rest);
+      };
+      return xhr;
+    }
+    window.XMLHttpRequest = PatchedXHR;
+  }
+})();
 
 
 let unityInstanceGlobal = null;

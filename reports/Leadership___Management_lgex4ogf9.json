@@ -1,0 +1,30 @@
+{
+  "_id": "lgex4ogf9",
+  "user": "test_user_001",
+  "userToken": "DUMMY_TOKEN_1776066182107_U25GIW5V",
+  "module": {
+    "_id": "6920a2eda37e548ad7b21444",
+    "title": "Leadership & Management",
+    "thumbnailUrl": ""
+  },
+  "overallScore": "1.0",
+  "interactionTime": "0 min 30 sec",
+  "speakingPace": {
+    "wpm": 0,
+    "rating": ""
+  },
+  "fillerWords": {
+    "count": 0,
+    "rating": ""
+  },
+  "skills": {
+    "communication": "",
+    "problemSolving": "",
+    "clarity": "",
+    "bodyLanguage": ""
+  },
+  "transcript": "",
+  "feedback": "",
+  "createdAt": "2026-04-13T07:43:02.123Z",
+  "updatedAt": "2026-04-13T07:43:02.123Z"
+}

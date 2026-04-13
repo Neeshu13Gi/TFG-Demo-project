@@ -1,0 +1,29 @@
+{
+  "_id": "pe7t0lt5o",
+  "user": "test_user_001",
+  "module": {
+    "_id": "6920a2eda37e548ad7b21444",
+    "title": "Leadership & Management",
+    "thumbnailUrl": ""
+  },
+  "overallScore": "1.0",
+  "interactionTime": "0 min 30 sec",
+  "speakingPace": {
+    "wpm": 120,
+    "rating": "Good"
+  },
+  "fillerWords": {
+    "count": 0,
+    "rating": "Excellent"
+  },
+  "skills": {
+    "communication": "Novice",
+    "problemSolving": "Novice",
+    "clarity": "Novice",
+    "bodyLanguage": "Novice"
+  },
+  "transcript": "test transcript",
+  "feedback": "test feedback",
+  "createdAt": "2026-04-13T07:29:42.270Z",
+  "updatedAt": "2026-04-13T07:29:42.270Z"
+}
