@@ -1,9 +1,9 @@
 const cacheName = "DefaultCompany-Web_TFGPro-0.1.0";
 const contentToCache = [
-    "Build/TFG(20-02-2026).loader.js",
-    "Build/TFG(20-02-2026).framework.js",
-    "Build/TFG(20-02-2026).data",
-    "Build/TFG(20-02-2026).wasm",
+    "Build/TFGWeb(20-03-26).loader.js",
+    "Build/TFGWeb(20-03-26).framework.js",
+    "Build/TFGWeb(20-03-26).data",
+    "Build/TFGWeb(20-03-26).wasm",
     "TemplateData/style.css"
 
 ];
