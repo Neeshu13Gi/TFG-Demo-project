@@ -286,7 +286,7 @@ app.get('/modules/:id', (req, res) => {
 // =====================
 
 // POST - CREATE/SAVE REPORT
-app.post('/reports', (req, res) => {
+const createReportHandler = (req, res) => {
   try {
     const token = extractAuthToken(req.headers.authorization);
     if (!token) return res.status(401).json({ message: "Not authorized", stack: "Authorization token required" });
@@ -344,7 +344,10 @@ app.post('/reports', (req, res) => {
     console.error('❌ Report creation error:', error);
     res.status(500).json({ message: error.message, stack: error.stack });
   }
-});
+};
+
+app.post('/reports', createReportHandler);
+app.post('/api/reports', createReportHandler);
 
 // GET - RETRIEVE REPORT BY ID
 app.get('/reports/:id', (req, res) => {
