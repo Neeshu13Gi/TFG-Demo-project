@@ -449,19 +449,58 @@ function launchUnityWebGL() {
     // Navigate to WebGL player in new approach - open it in the unity container
     const placeholder = document.querySelector('.unity-webgl-placeholder');
     placeholder.innerHTML = `
-        <div style="text-align: center; padding: 20px;">
-            <p style="margin-bottom: 10px;">Loading Unity WebGL Player...</p>
+        <div class="unity-webgl-fullscreen">
+            <div class="unity-webgl-toolbar">
+                <button class="btn btn-secondary" onclick="closeUnityWebGL()">Close Player</button>
+            </div>
             <iframe 
                 id="webglIframe"
-                src="${webglUrl}" 
-                style="width: 100%; height: 700px; border: none; border-radius: 8px;"
-                allowfullscreen="true"
-                sandbox="allow-same-origin allow-scripts allow-popups allow-pointer-lock allow-modals allow-top-navigation-by-user-activation"
+                src="${webglUrl}"
+                class="webgl-fullscreen-frame"
+                allowfullscreen
+                allow="fullscreen"
+                sandbox="allow-same-origin allow-scripts allow-popups allow-pointer-lock allow-modals allow-top-navigation-by-user-activation allow-fullscreen"
             ></iframe>
         </div>
     `;
     
     document.getElementById('unityContainer').style.display = 'block';
+
+    const iframe = document.getElementById('webglIframe');
+    if (iframe && iframe.requestFullscreen) {
+        iframe.requestFullscreen().catch((error) => {
+            console.warn('Unable to request fullscreen for Unity iframe:', error);
+        });
+    }
+}
+
+function closeUnityWebGL() {
+    const unityContainer = document.getElementById('unityContainer');
+    const placeholder = document.querySelector('.unity-webgl-placeholder');
+    const iframe = document.getElementById('webglIframe');
+
+    if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
+        const exitFullscreen = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+        if (exitFullscreen) {
+            exitFullscreen.call(document);
+        }
+    }
+
+    if (iframe) {
+        iframe.src = 'about:blank';
+    }
+
+    if (placeholder) {
+        placeholder.innerHTML = `
+            <p>🎮 Unity WebGL content would load here</p>
+            <p id="moduleIdDisplay"></p>
+            <p style="font-size: 12px; color: #999;">Module ID: <code id="moduleIdCode"></code></p>
+        `;
+    }
+
+    if (unityContainer) {
+        unityContainer.style.display = 'none';
+    }
 }
 
 // =====================
