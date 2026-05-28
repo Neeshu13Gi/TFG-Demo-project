@@ -2,6 +2,7 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import axios from 'axios';
+import path from 'path';
 
 // Load local .env values during development.
 // Render will supply GROQ_API_KEY from its environment variables.
@@ -16,6 +17,8 @@ const allowedOrigins = [
   'https://neeshu13gi.github.io'
 ];
 
+// Serve static files from root directory
+app.use(express.static(path.resolve()));
 
 app.use(cors({
   origin: (origin, callback) => {
