@@ -109,6 +109,6 @@ app.get('/health', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
   console.log(`Render endpoints:`);
-  console.log(`  POST https://myrenderbackend.onrender.com/suggestion`);
-  console.log(`  POST https://myrenderbackend.onrender.com/report`);
+  console.log(`  POST https://tfg-demo-project.onrender.com/suggestion`);
+  console.log(`  POST https://tfg-demo-project.onrender.com/report`);
 });
