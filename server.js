@@ -17,9 +17,7 @@ const allowedOrigins = [
   'https://neeshu13gi.github.io'
 ];
 
-// Serve static files from root directory
-app.use(express.static(path.resolve()));
-
+// CORS MUST come before routes
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -31,7 +29,10 @@ app.use(cors({
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 app.use(express.json());
+// Serve static files from root directory
+app.use(express.static(path.resolve()));
 
 const ensureGroqApiKey = () => {
   if (!GROQ_API_KEY) {
