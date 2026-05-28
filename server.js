@@ -14,7 +14,7 @@ const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://neeshu13gi.github.io'
+  'https://tfg-demo-project.onrender.com'
 ];
 
 // CORS MUST come before routes

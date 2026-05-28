@@ -8,15 +8,19 @@
 // =====================
 // Use same-origin in production; localhost in development
 const API_URL = (() => {
+
     const host = window.location.hostname;
+
     const isLocal =
         host === 'localhost' ||
         host === '127.0.0.1' ||
         host === '0.0.0.0' ||
-        // common LAN dev hostnames
         host.endsWith('.local');
 
-    return isLocal ? 'http://localhost:3000' : window.location.origin;
+    return isLocal
+        ? 'http://localhost:3000'
+        : 'https://tfg-demo-project.onrender.com';
+
 })();
 
 console.log('%c🔌 API Configuration', 'color: #667eea; font-size: 14px; font-weight: bold;');
