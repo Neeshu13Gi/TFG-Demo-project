@@ -312,33 +312,51 @@ app.get('/users/me', (req, res) => {
 // =====================
 
 app.post('/suggestion', async (req, res) => {
-  try {
-    const payload = createGroqPayload(req.body, 300);
-    const result = await requestGroqChatCompletion(payload);
-    return res.status(200).json({ success: true, data: result });
-  } catch (error) {
-    console.error('Suggestion endpoint error:', error.message);
-    return res.status(500).json({
-      success: false,
-      message: 'Unable to generate suggestion',
-      error: error.message
-    });
-  }
+
+    try {
+
+        const payload =
+            createGroqPayload(
+                req.body,
+                300);
+
+        const result =
+            await requestGroqChatCompletion(
+                payload);
+
+        return res.status(200).json(result);
+
+    } catch (error) {
+
+        return res.status(500).json({
+            error: error.message
+        });
+
+    }
 });
 
 app.post('/report', async (req, res) => {
-  try {
-    const payload = createGroqPayload(req.body, 500);
-    const result = await requestGroqChatCompletion(payload);
-    return res.status(200).json({ success: true, data: result });
-  } catch (error) {
-    console.error('Report endpoint error:', error.message);
-    return res.status(500).json({
-      success: false,
-      message: 'Unable to generate report',
-      error: error.message
-    });
-  }
+
+    try {
+
+        const payload =
+            createGroqPayload(
+                req.body,
+                500);
+
+        const result =
+            await requestGroqChatCompletion(
+                payload);
+
+        return res.status(200).json(result);
+
+    } catch (error) {
+
+        return res.status(500).json({
+            error: error.message
+        });
+
+    }
 });
 
 app.get('/health', (req, res) => {
