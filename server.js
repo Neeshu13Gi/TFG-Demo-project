@@ -71,6 +71,87 @@ const createGroqPayload = (body, defaultMaxTokens = 400) => {
   };
 };
 
+// =====================
+// IN-MEMORY USER STORAGE
+// =====================
+let users = [
+  { 
+    _id: 'test_user_001', 
+    name: 'Test User', 
+    email: 'test@example.com', 
+    password: 'test123', 
+    avatarUrl: '', 
+    role: 'user', 
+    token: 'PERSISTENT_TEST_TOKEN_001' 
+  }
+];
+
+const generateId = () => Math.random().toString(36).substr(2, 9);
+const generateToken = () => `TOKEN_${Date.now()}_${Math.random().toString(36).substring(2,10).toUpperCase()}`;
+const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+const extractAuthToken = (authHeader) => {
+  if (!authHeader || typeof authHeader !== 'string') return null;
+  const trimmed = authHeader.trim();
+  return trimmed.replace(/^bearer\s+/i, '').trim() || null;
+};
+
+// =====================
+// AUTH ENDPOINTS
+// =====================
+app.post('/auth/register', (req, res) => {
+  const { name, email, password } = req.body;
+  if (!name || !email || !password) return res.status(400).json({ success: false, message: "Name, email, and password required" });
+  if (!validateEmail(email)) return res.status(400).json({ success: false, message: "Invalid email" });
+  if (users.find(u => u.email === email)) return res.status(400).json({ success: false, message: "User already exists" });
+
+  const newUser = { _id: generateId(), name, email, password, avatarUrl: "", role: "user", token: generateToken() };
+  users.push(newUser);
+  const { password: _, ...userResponse } = newUser;
+  res.status(201).json({ success: true, data: userResponse });
+});
+
+app.post('/auth/login', (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ success: false, message: "Email and password required" });
+  
+  let user = users.find(u => u.email === email && u.password === password);
+  
+  if (!user) {
+    user = { 
+      _id: generateId(), 
+      name: email.split('@')[0], 
+      email, 
+      password, 
+      avatarUrl: '', 
+      role: 'user', 
+      token: null 
+    };
+    users.push(user);
+  }
+
+  user.token = generateToken();
+  const { password: _, ...userResponse } = user;
+  res.status(200).json({ success: true, data: userResponse });
+});
+
+app.post('/auth/logout', (req, res) => res.status(200).json({ success: true, message: "Logged out successfully" }));
+
+app.get('/users/me', (req, res) => {
+  const token = extractAuthToken(req.headers.authorization);
+  if (!token) return res.status(401).json({ success: false, message: "Authorization token required" });
+  
+  const user = users.find(u => u.token === token);
+  if (!user) return res.status(401).json({ success: false, message: "Invalid or expired token" });
+  
+  const { password: _, ...userResponse } = user;
+  res.status(200).json({ success: true, data: userResponse });
+});
+
+// =====================
+// GROQ API ENDPOINTS
+// =====================
+
 app.post('/suggestion', async (req, res) => {
   try {
     const payload = createGroqPayload(req.body, 300);
