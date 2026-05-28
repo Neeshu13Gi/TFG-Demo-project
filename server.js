@@ -13,8 +13,9 @@ const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://myrenderbackend.onrender.com'
+  'https://neeshu13gi.github.io'
 ];
+
 
 app.use(cors({
   origin: (origin, callback) => {
