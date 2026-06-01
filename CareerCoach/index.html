@@ -21,28 +21,6 @@
       <div id="unity-warning"> </div>
     </div>
     <script>
-      // ========================================
-      // JOB CONTEXT FROM URL PARAMETERS
-      // ========================================
-      const urlParams = new URLSearchParams(window.location.search);
-      const jobContext = {
-        jobId: urlParams.get('jobId'),
-        jobTitle: decodeURIComponent(urlParams.get('jobTitle') || ''),
-        jobDescription: decodeURIComponent(urlParams.get('jobDescription') || ''),
-        jobSkills: decodeURIComponent(urlParams.get('jobSkills') || ''),
-        jobExperience: decodeURIComponent(urlParams.get('jobExperience') || '')
-      };
-
-      console.log('📋 Job Context Loaded:', jobContext);
-
-      // Make job context globally available to Unity
-      window.jobContext = jobContext;
-
-      // Pass to Convai SDK if available
-      if (window.ConvaiClient) {
-        console.log('🎯 Convai SDK detected, initializing with job context...');
-      }
-
       window.addEventListener("load", function () {
         if ("serviceWorker" in navigator) {
           navigator.serviceWorker.register("ServiceWorker.js");
@@ -116,18 +94,6 @@
           progressBarFull.style.width = 100 * progress + "%";
         }).then((unityInstance) => {
           loadingBar.style.display = "none";
-          // ========================================
-          // SEND JOB CONTEXT TO UNITY
-          // ========================================
-          console.log('🎮 Unity instance ready, sending job context...');
-          if (jobContext.jobId) {
-            try {
-              unityInstance.SendMessage('InterviewManager', 'SetJobContext', JSON.stringify(jobContext));
-              console.log('✅ Job context sent to Unity');
-            } catch (e) {
-              console.warn('⚠️ Could not send message to Unity:', e);
-            }
-          }
         }).catch((message) => {
           alert(message);
         });

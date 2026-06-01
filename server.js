@@ -233,6 +233,62 @@ app.get('/modules/:id', (req, res) => {
 
 
 // =====================
+// JOB ROUTES FOR CAREER COACH
+// =====================
+
+const CAREER_JOBS = [
+  {
+    _id: '101',
+    title: 'Frontend Developer',
+    company: 'TFG Technologies',
+    skills: ['HTML', 'CSS', 'JavaScript', 'React'],
+    experience: '2-4 years',
+    description: 'Build modern responsive interfaces, collaborate with product teams, and implement design-driven UI components.'
+  },
+  {
+    _id: '102',
+    title: 'Sales Executive',
+    company: 'TFG Solutions',
+    skills: ['Sales', 'Negotiation', 'CRM', 'Communication'],
+    experience: '3+ years',
+    description: 'Lead sales conversations, identify customer needs, and close enterprise deals with consultative selling skills.'
+  },
+  {
+    _id: '103',
+    title: 'UI/UX Designer',
+    company: 'TFG Innovation Labs',
+    skills: ['Figma', 'Prototyping', 'User Research', 'Visual Design'],
+    experience: '2-5 years',
+    description: 'Design intuitive user experiences and create high-fidelity prototypes for web and mobile applications.'
+  }
+];
+
+// GET ALL JOBS
+app.get('/jobs', (req, res) => {
+  res.status(200).json({
+    success: true,
+    data: CAREER_JOBS
+  });
+});
+
+// GET JOB BY ID
+app.get('/jobs/:id', (req, res) => {
+  const job = CAREER_JOBS.find(j => j._id === req.params.id);
+  
+  if (!job) {
+    return res.status(404).json({
+      success: false,
+      message: 'Job not found'
+    });
+  }
+  
+  res.status(200).json({
+    success: true,
+    data: job
+  });
+});
+
+// =====================
 // REPORT ROUTES
 // =====================
 
