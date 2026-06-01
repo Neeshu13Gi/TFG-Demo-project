@@ -520,7 +520,10 @@ function startCareerInterview(jobId) {
     currentCareerJob = job;
     const jobTitle = encodeURIComponent(job.title);
     const jobDesc = encodeURIComponent(job.description);
-    const webglUrl = `/unity-build/index.html?jobId=${job._id}&jobTitle=${jobTitle}&jobDescription=${jobDesc}`;
+    const jobSkills = encodeURIComponent(job.skills.join(', '));
+    const jobExp = encodeURIComponent(job.experience);
+    const webglUrl = `/CareerCoach/index.html?jobId=${job._id}&jobTitle=${jobTitle}&jobDescription=${jobDesc}&jobSkills=${jobSkills}&jobExperience=${jobExp}`;
+    console.log(`🎯 Launching CareerCoach interview:`, webglUrl);
     showToast(`Opening interview for ${job.title}`, 'success');
     window.location.href = webglUrl;
 }
