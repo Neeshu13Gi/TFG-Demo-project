@@ -317,6 +317,35 @@ body {
     gap: 0.3rem;
 }
 
+.job-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.job-actions .btn {
+    flex: 1 1 auto;
+}
+
+.career-job-detail .module-header {
+    margin-bottom: 1.5rem;
+}
+
+.career-job-detail .module-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.career-job-detail .info-item {
+    background: #f8f9ff;
+    padding: 1rem;
+    border-radius: 10px;
+    color: #333;
+}
+
 /* =====================
    MODULE DETAIL SECTION
    ===================== */

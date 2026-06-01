@@ -37,6 +37,34 @@ const USER_KEY = 'currentUser';
 let currentUser = null;
 let currentModule = null;
 let allModules = [];
+let currentCareerJob = null;
+
+const careerJobs = [
+    {
+        _id: '101',
+        title: 'Frontend Developer',
+        company: 'TFG Technologies',
+        skills: ['HTML', 'CSS', 'JavaScript', 'React'],
+        experience: '2-4 years',
+        description: 'Build modern responsive interfaces, collaborate with product teams, and implement design-driven UI components.'
+    },
+    {
+        _id: '102',
+        title: 'Sales Executive',
+        company: 'TFG Solutions',
+        skills: ['Sales', 'Negotiation', 'CRM', 'Communication'],
+        experience: '3+ years',
+        description: 'Lead sales conversations, identify customer needs, and close enterprise deals with consultative selling skills.'
+    },
+    {
+        _id: '103',
+        title: 'UI/UX Designer',
+        company: 'TFG Innovation Labs',
+        skills: ['Figma', 'Prototyping', 'User Research', 'Visual Design'],
+        experience: '2-5 years',
+        description: 'Design intuitive user experiences and create high-fidelity prototypes for web and mobile applications.'
+    }
+];
 
 // =====================
 // INITIALIZATION
@@ -92,6 +120,8 @@ function showDashboard() {
     document.getElementById('authSection').style.display = 'none';
     document.getElementById('modulesSection').style.display = 'block';
     document.getElementById('moduleDetailSection').style.display = 'none';
+    document.getElementById('careerSection').style.display = 'none';
+    document.getElementById('careerJobDetailSection').style.display = 'none';
     document.getElementById('reportsSection').style.display = 'none';
     document.getElementById('reportDetailSection').style.display = 'none';
     
@@ -417,8 +447,82 @@ function backToModules() {
     console.log('⬅️ Going back to modules list');
     document.getElementById('moduleDetailSection').style.display = 'none';
     document.getElementById('unityContainer').style.display = 'none';
+    document.getElementById('careerSection').style.display = 'none';
+    document.getElementById('careerJobDetailSection').style.display = 'none';
     document.getElementById('modulesSection').style.display = 'block';
     currentModule = null;
+}
+
+function showCareerCoach() {
+    console.log('💼 Showing Career Coach');
+    document.getElementById('authSection').style.display = 'none';
+    document.getElementById('modulesSection').style.display = 'none';
+    document.getElementById('moduleDetailSection').style.display = 'none';
+    document.getElementById('careerSection').style.display = 'block';
+    document.getElementById('careerJobDetailSection').style.display = 'none';
+    document.getElementById('reportsSection').style.display = 'none';
+    document.getElementById('reportDetailSection').style.display = 'none';
+    document.getElementById('authLinks').style.display = 'none';
+    document.getElementById('userInfo').style.display = 'flex';
+    renderCareerJobs();
+}
+
+function renderCareerJobs() {
+    console.log('🧾 Rendering career jobs');
+    const list = document.getElementById('careerJobsList');
+    if (!list) {
+        console.error('Career jobs container missing');
+        return;
+    }
+    list.innerHTML = careerJobs.map(job => `
+        <div class="module-card career-job-card">
+            <div class="module-thumbnail">💼</div>
+            <div class="module-content">
+                <h3>${job.title}</h3>
+                <p><strong>${job.company}</strong></p>
+                <p>${job.description}</p>
+                <div class="module-meta">
+                    <span>Experience: ${job.experience}</span>
+                    <span>Skills: ${job.skills.join(', ')}</span>
+                </div>
+                <div class="job-actions">
+                    <button class="btn btn-secondary" onclick="showCareerJobDetail('${job._id}')">View Job</button>
+                    <button class="btn btn-primary" onclick="startCareerInterview('${job._id}')">Start Interview</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function showCareerJobDetail(jobId) {
+    console.log('📄 Showing career job detail for', jobId);
+    const job = careerJobs.find(item => item._id === jobId);
+    if (!job) {
+        showToast('Job not found', 'error');
+        return;
+    }
+    currentCareerJob = job;
+    document.getElementById('careerJobTitle').textContent = job.title;
+    document.getElementById('careerJobDescription').textContent = job.description;
+    document.getElementById('careerJobCompany').textContent = job.company;
+    document.getElementById('careerJobExperience').textContent = job.experience;
+    document.getElementById('careerJobSkills').textContent = job.skills.join(', ');
+    document.getElementById('careerSection').style.display = 'none';
+    document.getElementById('careerJobDetailSection').style.display = 'block';
+}
+
+function startCareerInterview(jobId) {
+    const job = careerJobs.find(item => item._id === jobId) || currentCareerJob;
+    if (!job) {
+        showToast('Please select a job first', 'error');
+        return;
+    }
+    currentCareerJob = job;
+    const jobTitle = encodeURIComponent(job.title);
+    const jobDesc = encodeURIComponent(job.description);
+    const webglUrl = `/unity-build/index.html?jobId=${job._id}&jobTitle=${jobTitle}&jobDescription=${jobDesc}`;
+    showToast(`Opening interview for ${job.title}`, 'success');
+    window.location.href = webglUrl;
 }
 
 // =====================

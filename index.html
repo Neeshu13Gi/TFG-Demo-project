@@ -17,6 +17,7 @@
                 <div class="user-info" id="userInfo" style="display: none;">
                     <span id="userName"></span>
                     <button class="btn btn-nav" onclick="showDashboard()">Dashboard</button>
+                    <button class="btn btn-nav" onclick="showCareerCoach()">Career Coach</button>
                     <button class="btn btn-nav" onclick="showReports()">Reports</button>
                     <button class="btn btn-logout" onclick="logout()">Logout</button>
                 </div>
@@ -76,7 +77,30 @@
             <div id="welcomeMessage" class="welcome" style="display: none;">
                 <h2>Welcome, <span id="welcomeName"></span>! 👋</h2>
                 <p>Select a module below to start learning</p>
+                <button class="btn btn-secondary btn-block" onclick="showCareerCoach()">Open Career Coach</button>
             </div>
+        </section>
+
+        <!-- CAREER COACH SECTION -->
+        <section id="careerSection" class="career-section" style="display: none;">
+            <button class="btn btn-back" onclick="showDashboard()">← Back to Dashboard</button>
+            <h2>Career Coach Jobs</h2>
+            <p>Choose a role below to see the job description and start the interview simulation.</p>
+            <div id="careerJobsList" class="modules-grid"></div>
+        </section>
+
+        <section id="careerJobDetailSection" class="career-job-detail" style="display: none;">
+            <button class="btn btn-back" onclick="showCareerCoach()">← Back to Career Coach</button>
+            <div class="module-header">
+                <h2 id="careerJobTitle"></h2>
+                <p id="careerJobDescription"></p>
+            </div>
+            <div class="module-info">
+                <div class="info-item"><strong>Company:</strong> <span id="careerJobCompany"></span></div>
+                <div class="info-item"><strong>Experience:</strong> <span id="careerJobExperience"></span></div>
+                <div class="info-item"><strong>Skills:</strong> <span id="careerJobSkills"></span></div>
+            </div>
+            <button class="btn btn-primary btn-block" id="startCareerInterviewBtn" onclick="startCareerInterview()">Start Interview</button>
         </section>
 
         <!-- MODULES SECTION -->
