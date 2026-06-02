@@ -590,6 +590,7 @@ function showCareerJobDetail(jobId) {
         return;
     }
     currentCareerJob = job;
+    
     document.getElementById('careerJobTitle').textContent = job.title;
     document.getElementById('careerJobDescription').textContent = job.description;
     document.getElementById('careerJobCompany').textContent = job.company;
