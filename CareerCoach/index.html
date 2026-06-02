@@ -18,9 +18,21 @@
           <div id="unity-progress-bar-full"></div>
         </div>
       </div>
-      <div id="unity-warning"> </div>
+      <div id="career-debug-panel" style="position: fixed; bottom: 12px; left: 12px; z-index: 9999; background: rgba(0, 0, 0, 0.85); color: #fff; padding: 12px 14px; border-radius: 8px; font-family: Arial, sans-serif; font-size: 12px; max-width: 320px; line-height: 1.4; box-shadow: 0 8px 24px rgba(0,0,0,0.35);">
+      <strong>CareerCoach Debug</strong>
+      <div id="careerDebugStatus" style="margin-top: 8px; color: #9fcdff;">Waiting for WebGL load...</div>
+    </div>
+    <div id="unity-warning"> </div>
     </div>
     <script>
+      function updateDebugStatus(message) {
+        console.log('[CareerCoach Debug]', message);
+        var panel = document.getElementById('careerDebugStatus');
+        if (panel) {
+          panel.textContent = message;
+        }
+      }
+
       function getUrlParams() {
         const params = new URLSearchParams(window.location.search);
         return {
@@ -32,32 +44,41 @@
         };
       }
 
-      function sendJobIdToUnity(unityInstance, jobId) {
+      function sendJobIdToUnity(unityInstance, jobId, attempt = 1) {
         if (!jobId) {
+          updateDebugStatus('No jobId available to send to Unity');
           console.warn('No jobId available to send to Unity');
           return;
         }
-        console.log('Sending jobId to Unity:', jobId);
+
+        updateDebugStatus(`Sending jobId to Unity (attempt ${attempt}): ${jobId}`);
         unityInstance.SendMessage('InterviewManager', 'SetJobId', jobId);
+
+        if (attempt < 3) {
+          setTimeout(function() {
+            sendJobIdToUnity(unityInstance, jobId, attempt + 1);
+          }, 1000);
+        }
       }
 
       window.addEventListener('error', function (event) {
         console.error('Window error:', event.message, event.filename, event.lineno, event.colno, event.error);
+        updateDebugStatus('Window error: ' + event.message);
       });
 
-      window.addEventListener("load", function () {
-        if ("serviceWorker" in navigator) {
-          navigator.serviceWorker.register("ServiceWorker.js").catch(function (err) {
+      window.addEventListener('load', function () {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('ServiceWorker.js').catch(function (err) {
             console.warn('ServiceWorker registration failed:', err);
           });
         }
       });
 
-      var container = document.querySelector("#unity-container");
-      var canvas = document.querySelector("#unity-canvas");
-      var loadingBar = document.querySelector("#unity-loading-bar");
-      var progressBarFull = document.querySelector("#unity-progress-bar-full");
-      var warningBanner = document.querySelector("#unity-warning");
+      var container = document.querySelector('#unity-container');
+      var canvas = document.querySelector('#unity-canvas');
+      var loadingBar = document.querySelector('#unity-loading-bar');
+      var progressBarFull = document.querySelector('#unity-progress-bar-full');
+      var warningBanner = document.querySelector('#unity-warning');
 
       function unityShowBanner(msg, type) {
         function updateBannerVisibility() {
@@ -77,16 +98,16 @@
         updateBannerVisibility();
       }
 
-      var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/CareerCoach.loader.js";
+      var buildUrl = 'Build';
+      var loaderUrl = buildUrl + '/CareerCoach.loader.js';
       var config = {
-        dataUrl: buildUrl + "/CareerCoach.data",
-        frameworkUrl: buildUrl + "/CareerCoach.framework.js",
-        codeUrl: buildUrl + "/CareerCoach.wasm",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "DefaultCompany",
-        productName: "Web_TFGPro",
-        productVersion: "0.1.0",
+        dataUrl: buildUrl + '/CareerCoach.data',
+        frameworkUrl: buildUrl + '/CareerCoach.framework.js',
+        codeUrl: buildUrl + '/CareerCoach.wasm',
+        streamingAssetsUrl: 'StreamingAssets',
+        companyName: 'DefaultCompany',
+        productName: 'Web_TFGPro',
+        productVersion: '0.1.0',
         showBanner: unityShowBanner,
       };
 
@@ -97,27 +118,33 @@
         document.getElementsByTagName('head')[0].appendChild(meta);
       }
 
-      loadingBar.style.display = "block";
+      loadingBar.style.display = 'block';
+      updateDebugStatus('Preparing WebGL loader...');
 
       var params = getUrlParams();
       console.log('CareerCoach URL params:', params);
+      updateDebugStatus('URL params loaded: jobId=' + params.jobId);
 
-      var script = document.createElement("script");
+      var script = document.createElement('script');
       script.src = loaderUrl;
       script.onload = () => {
         console.log('CareerCoach loader script loaded:', loaderUrl);
+        updateDebugStatus('Loader script loaded, creating Unity instance...');
         createUnityInstance(canvas, config, (progress) => {
-          progressBarFull.style.width = 100 * progress + "%";
+          progressBarFull.style.width = 100 * progress + '%';
         }).then((unityInstance) => {
-          loadingBar.style.display = "none";
+          loadingBar.style.display = 'none';
+          updateDebugStatus('Unity instance ready. Sending jobId...');
           sendJobIdToUnity(unityInstance, params.jobId);
         }).catch((message) => {
           console.error('Unity error:', message);
+          updateDebugStatus('Unity creation failed: ' + message);
           alert('Failed to load Career Coach: ' + message);
         });
       };
       script.onerror = function () {
         console.error('Failed to load loader script:', loaderUrl);
+        updateDebugStatus('Loader script failed to load');
         alert('Failed to load Career Coach loader script.');
       };
       document.body.appendChild(script);
