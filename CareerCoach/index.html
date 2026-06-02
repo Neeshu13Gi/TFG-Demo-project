@@ -20,18 +20,177 @@
       </div>
       <div id="unity-warning"> </div>
     </div>
+
+    <!-- LOG VIEWER PANEL -->
+    <div id="logPanel" style="position: fixed; bottom: 20px; right: 20px; width: 400px; max-height: 350px; background: #1e1e1e; border: 2px solid #4CAF50; border-radius: 4px; color: #d4d4d4; font-family: 'Courier New', monospace; font-size: 11px; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.5); display: flex; flex-direction: column;">
+      <div style="padding: 10px 12px; background: #2d2d2d; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; cursor: move; border-radius: 2px 2px 0 0;">
+        <span style="font-weight: bold; color: #4CAF50;">📋 CareerCoach Logs</span>
+        <button id="closeLogBtn" style="background: none; border: none; color: #d4d4d4; cursor: pointer; font-size: 14px; padding: 0; width: 24px; height: 24px;">✕</button>
+      </div>
+      <div id="logContent" style="overflow-y: auto; padding: 10px 12px; flex: 1; background: #1e1e1e;">
+        <div style="color: #888;">Initializing logs...</div>
+      </div>
+    </div>
+
     <script>
-      window.addEventListener("load", function () {
-        if ("serviceWorker" in navigator) {
-          navigator.serviceWorker.register("ServiceWorker.js");
+      // ============================================
+      // LOG CAPTURE AND STORAGE SYSTEM
+      // ============================================
+      const LogStorage = (() => {
+        const STORAGE_KEY = 'sessionLogs';
+        const MAX_LOGS = 300;
+        let logs = [];
+
+        function init() {
+          try {
+            const stored = sessionStorage.getItem(STORAGE_KEY);
+            logs = stored ? JSON.parse(stored) : [];
+          } catch (e) {
+            logs = [];
+          }
+        }
+
+        function add(level, args) {
+          const timestamp = new Date().toLocaleTimeString();
+          const message = args.map(arg => 
+            typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+          ).join(' ');
+          
+          logs.push({ timestamp, level, message });
+          
+          if (logs.length > MAX_LOGS) {
+            logs = logs.slice(-MAX_LOGS);
+          }
+          
+          try {
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+          } catch (e) {
+            // Silently fail if storage unavailable
+          }
+        }
+
+        function getAll() {
+          return logs;
+        }
+
+        return { init, add, getAll };
+      })();
+
+      // Override console methods
+      LogStorage.init();
+      
+      const originalLog = console.log;
+      const originalWarn = console.warn;
+      const originalError = console.error;
+
+      console.log = function(...args) {
+        LogStorage.add('log', args);
+        originalLog.apply(console, args);
+      };
+
+      console.warn = function(...args) {
+        LogStorage.add('warn', args);
+        originalWarn.apply(console, args);
+      };
+
+      console.error = function(...args) {
+        LogStorage.add('error', args);
+        originalError.apply(console, args);
+      };
+
+      // ============================================
+      // LOG VIEWER UI
+      // ============================================
+      function updateLogDisplay() {
+        const logs = LogStorage.getAll();
+        const logContent = document.getElementById('logContent');
+
+        if (logs.length === 0) {
+          logContent.innerHTML = '<div style="color: #888;">Waiting for logs...</div>';
+          return;
+        }
+
+        const logHTML = logs.map(log => {
+          let color = '#d4d4d4';
+          if (log.level === 'error') color = '#ff6b6b';
+          else if (log.level === 'warn') color = '#ffd93d';
+          else if (log.level === 'info') color = '#6bcf7f';
+
+          return `<div style="color: ${color}; margin-bottom: 6px; line-height: 1.3; border-left: 2px solid ${color}; padding-left: 6px;">
+            <span style="color: #666; font-size: 10px;">[${log.timestamp}]</span><br/>${log.message}
+          </div>`;
+        }).join('');
+
+        logContent.innerHTML = logHTML;
+        logContent.scrollTop = logContent.scrollHeight;
+      }
+
+      // Auto-refresh logs
+      setInterval(updateLogDisplay, 500);
+
+      const logPanel = document.getElementById('logPanel');
+      const closeLogBtn = document.getElementById('closeLogBtn');
+
+      closeLogBtn.addEventListener('click', () => {
+        logPanel.style.display = 'none';
+      });
+
+      // Make log panel draggable
+      let isDragging = false;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      document.querySelector('[style*="cursor: move"]').addEventListener('mousedown', (e) => {
+        isDragging = true;
+        offsetX = e.clientX - logPanel.offsetLeft;
+        offsetY = e.clientY - logPanel.offsetTop;
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+          logPanel.style.right = 'auto';
+          logPanel.style.bottom = 'auto';
+          logPanel.style.left = (e.clientX - offsetX) + 'px';
+          logPanel.style.top = (e.clientY - offsetY) + 'px';
         }
       });
 
+      document.addEventListener('mouseup', () => {
+        isDragging = false;
+      });
+
+      // ============================================
+      // CAREER COACH INITIALIZATION
+      // ============================================
+      console.log('%c🎤 CareerCoach WebGL Page Loading', 'color: #4CAF50; font-size: 14px; font-weight: bold;');
+      console.log('📍 URL:', window.location.href);
+      console.log('🔗 Pathname:', window.location.pathname);
+
+      // Get DOM elements
       var container = document.querySelector("#unity-container");
       var canvas = document.querySelector("#unity-canvas");
       var loadingBar = document.querySelector("#unity-loading-bar");
       var progressBarFull = document.querySelector("#unity-progress-bar-full");
       var warningBanner = document.querySelector("#unity-warning");
+
+      console.log('✅ DOM elements loaded:', {
+        container: !!container,
+        canvas: !!canvas,
+        loadingBar: !!loadingBar,
+        warningBanner: !!warningBanner
+      });
+
+      // Service Worker registration
+      window.addEventListener("load", function () {
+        if ("serviceWorker" in navigator) {
+          console.log('📱 Registering Service Worker');
+          navigator.serviceWorker.register("ServiceWorker.js").then(() => {
+            console.log('✅ Service Worker registered');
+          }).catch((err) => {
+            console.warn('⚠️ Service Worker registration failed:', err);
+          });
+        }
+      });
 
       // Shows a temporary message banner/ribbon for a few seconds, or
       // a permanent error message on top of the canvas if type=='error'.
@@ -86,31 +245,73 @@
       }
 
       loadingBar.style.display = "block";
+      console.log('📦 Starting CareerCoach Unity initialization...');
+      console.log('🔧 Build URL:', buildUrl);
+      console.log('📄 Loader URL:', loaderUrl);
 
       var script = document.createElement("script");
       script.src = loaderUrl;
+      
       script.onload = () => {
+        console.log('✅ Loader script loaded successfully');
+        console.log('🎬 Creating Unity instance...');
+        
         createUnityInstance(canvas, config, (progress) => {
+          const percent = Math.round(progress * 100);
+          console.log(`📊 Loading progress: ${percent}%`);
           progressBarFull.style.width = 100 * progress + "%";
         }).then((unityInstance) => {
+          console.log('✅ Unity instance created successfully');
+          loadingBar.style.display = "none";
 
-    loadingBar.style.display = "none";
+          // Extract job parameters from URL
+          const params = new URLSearchParams(window.location.search);
+          const jobId = params.get("jobId");
+          const jobTitle = params.get("jobTitle");
+          const jobDescription = params.get("jobDescription");
+          const jobSkills = params.get("jobSkills");
+          const jobExperience = params.get("jobExperience");
 
-    const params = new URLSearchParams(window.location.search);
-    const jobId = params.get("jobId");
+          console.log('📋 Job Parameters:');
+          console.log('  - Job ID:', jobId);
+          console.log('  - Title:', jobTitle);
+          console.log('  - Description:', jobDescription);
+          console.log('  - Skills:', jobSkills);
+          console.log('  - Experience:', jobExperience);
 
-    console.log("Job ID from URL:", jobId);
+          // Send job data to Unity
+          if (jobId) {
+            console.log('📤 Sending SetJobId message to InterviewManager');
+            unityInstance.SendMessage(
+              "InterviewManager",
+              "SetJobId",
+              jobId
+            );
+          }
 
-    unityInstance.SendMessage(
-        "InterviewManager",
-        "SetJobId",
-        jobId
-    );
-}).catch((message) => {
-          alert(message);
+          console.log('🎤 CareerCoach WebGL is ready!');
+        }).catch((message) => {
+          console.error('❌ Failed to create Unity instance:', message);
+          alert('Failed to load Career Coach: ' + message);
+          loadingBar.style.display = "none";
         });
       };
+      
+      script.onerror = () => {
+        console.error('❌ Failed to load loader script');
+        console.error('📍 Attempted to load:', loaderUrl);
+        console.error('🔗 Absolute path:', buildUrl + "/" + loaderUrl.split('/').pop());
+        loadingBar.style.display = "none";
+        alert('Error: Failed to load CareerCoach loader script from: ' + loaderUrl);
+      };
+
+      console.log('📁 Appending loader script to document');
       document.body.appendChild(script);
+
+      // Additional error handling
+      window.addEventListener('error', (event) => {
+        console.error('❌ Window error event:', event.message, event.filename, event.lineno);
+      });
     </script>
   </body>
 </html>

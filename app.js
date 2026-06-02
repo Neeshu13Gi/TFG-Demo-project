@@ -590,7 +590,7 @@ function showCareerJobDetail(jobId) {
         return;
     }
     currentCareerJob = job;
-    
+
     document.getElementById('careerJobTitle').textContent = job.title;
     document.getElementById('careerJobDescription').textContent = job.description;
     document.getElementById('careerJobCompany').textContent = job.company;
@@ -601,11 +601,21 @@ function showCareerJobDetail(jobId) {
 }
 
 function startCareerInterview(jobId) {
+    console.log('🎯 startCareerInterview called with jobId:', jobId);
+    console.log('📦 currentCareerJob:', currentCareerJob);
+    
     const job = careerJobs.find(item => item._id === jobId) || currentCareerJob;
+    
     if (!job) {
+        console.error('❌ No job found');
+        console.log('  - jobId parameter:', jobId);
+        console.log('  - currentCareerJob:', currentCareerJob);
+        console.log('  - careerJobs:', careerJobs);
         showToast('Please select a job first', 'error');
         return;
     }
+    
+    console.log('✅ Job found:', job.title);
     currentCareerJob = job;
     const jobTitle = encodeURIComponent(job.title);
     const jobDesc = encodeURIComponent(job.description);
@@ -614,7 +624,7 @@ function startCareerInterview(jobId) {
     
     // Build URL - use relative path from current page
     const webglUrl = `./CareerCoach/index.html?jobId=${job._id}&jobTitle=${jobTitle}&jobDescription=${jobDesc}&jobSkills=${jobSkills}&jobExperience=${jobExp}`;
-    console.log(`🎯 Launching CareerCoach interview:`, webglUrl);
+    console.log(`🎯 WebGL URL:`, webglUrl);
     console.log(`📍 Current location:`, window.location.href);
     showToast(`Opening interview for ${job.title}`, 'success');
     
@@ -622,13 +632,22 @@ function startCareerInterview(jobId) {
     const container = document.getElementById('careerCoachContainer');
     const placeholder = document.querySelector('.career-webgl-placeholder');
     
+    if (!container) {
+        console.error('❌ careerCoachContainer not found in DOM');
+        showToast('Error: Interview container not found in page', 'error');
+        return;
+    }
+
     if (!placeholder) {
         console.error('❌ career-webgl-placeholder not found in DOM');
-        showToast('Error: Interview container not found', 'error');
+        console.log('📍 Looking for element with class: career-webgl-placeholder');
+        console.log('📍 Container HTML:', container.innerHTML);
+        showToast('Error: Interview placeholder not found', 'error');
         return;
     }
     
     console.log('✅ Container and placeholder found');
+    console.log('📊 Creating iframe with fullscreen layout...');
     
     placeholder.innerHTML = `
         <div class="career-webgl-fullscreen">
@@ -651,6 +670,7 @@ function startCareerInterview(jobId) {
         </div>
     `;
     
+    console.log('📱 Showing container and hiding button...');
     container.style.display = 'block';
     document.getElementById('startCareerInterviewBtn').style.display = 'none';
     
@@ -661,6 +681,8 @@ function startCareerInterview(jobId) {
         
         if (iframe) {
             console.log(`📺 iframe src:`, iframe.src);
+            console.log(`📺 iframe id:`, iframe.id);
+            console.log(`📺 iframe parent:`, iframe.parentElement.id || iframe.parentElement.className);
             
             // Load event to verify iframe is loading
             iframe.addEventListener('load', () => {
@@ -672,21 +694,25 @@ function startCareerInterview(jobId) {
                 showToast('Failed to load Career Coach', 'error');
             });
             
-            // Additional check: log if iframe is accessible
+            // Check iframe accessibility
             try {
                 console.log('🔍 Checking iframe accessibility...');
-                // This might throw if cross-origin, which is expected
-                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                if (iframeDoc) {
-                    console.log('✅ iframe is accessible');
-                } else {
-                    console.warn('⚠️ iframe document not immediately accessible (may load later)');
-                }
+                setTimeout(() => {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+                    if (iframeDoc) {
+                        console.log('✅ iframe is accessible and loaded');
+                    } else {
+                        console.log('⏳ iframe document not yet available (will load shortly)');
+                    }
+                }, 1000);
             } catch (e) {
-                console.warn('⚠️ Cannot directly access iframe:', e.message);
+                console.log('⚠️ Cannot access iframe content (expected for cross-origin):', e.message);
             }
         } else {
             console.error('❌ Failed to find iframe after creation');
+            console.error('❌ iframe search results:');
+            console.error('   - getElementById careerCoachIframe:', document.getElementById('careerCoachIframe'));
+            console.error('   - querySelector #careerCoachIframe:', document.querySelector('#careerCoachIframe'));
             showToast('Error: Failed to create interview container', 'error');
         }
     }, 100);

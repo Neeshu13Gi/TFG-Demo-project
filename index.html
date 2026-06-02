@@ -100,7 +100,7 @@
                 <div class="info-item"><strong>Experience:</strong> <span id="careerJobExperience"></span></div>
                 <div class="info-item"><strong>Skills:</strong> <span id="careerJobSkills"></span></div>
             </div>
-            <button class="btn btn-primary btn-block" id="startCareerInterviewBtn" onclick="startCareerInterview()">Start Interview</button>
+            <button class="btn btn-primary btn-block" id="startCareerInterviewBtn" onclick="startCareerInterview(currentCareerJob ? currentCareerJob._id : null)">Start Interview</button>
             <div id="careerCoachContainer" style="display: none; margin-top: 20px;">
                 <h3>Career Coach Interview</h3>
                 <div class="career-webgl-placeholder">
