@@ -18,68 +18,27 @@
           <div id="unity-progress-bar-full"></div>
         </div>
       </div>
-      <div id="career-debug-panel" style="position: fixed; bottom: 12px; left: 12px; z-index: 9999; background: rgba(0, 0, 0, 0.85); color: #fff; padding: 12px 14px; border-radius: 8px; font-family: Arial, sans-serif; font-size: 12px; max-width: 320px; line-height: 1.4; box-shadow: 0 8px 24px rgba(0,0,0,0.35);">
-      <strong>CareerCoach Debug</strong>
-      <div id="careerDebugStatus" style="margin-top: 8px; color: #9fcdff;">Waiting for WebGL load...</div>
-    </div>
-    <div id="unity-warning"> </div>
+      <div id="unity-warning"> </div>
     </div>
     <script>
-      function updateDebugStatus(message) {
-        console.log('[CareerCoach Debug]', message);
-        var panel = document.getElementById('careerDebugStatus');
-        if (panel) {
-          panel.textContent = message;
-        }
-      }
-
-      function getUrlParams() {
-        const params = new URLSearchParams(window.location.search);
-        return {
-          jobId: params.get('jobId'),
-          jobTitle: params.get('jobTitle'),
-          jobDescription: params.get('jobDescription'),
-          jobSkills: params.get('jobSkills'),
-          jobExperience: params.get('jobExperience')
-        };
-      }
-
-      function sendJobIdToUnity(unityInstance, jobId, attempt = 1) {
-        if (!jobId) {
-          updateDebugStatus('No jobId available to send to Unity');
-          console.warn('No jobId available to send to Unity');
-          return;
-        }
-
-        updateDebugStatus(`Sending jobId to Unity (attempt ${attempt}): ${jobId}`);
-        unityInstance.SendMessage('InterviewManager', 'SetJobId', jobId);
-
-        if (attempt < 3) {
-          setTimeout(function() {
-            sendJobIdToUnity(unityInstance, jobId, attempt + 1);
-          }, 1000);
-        }
-      }
-
-      window.addEventListener('error', function (event) {
-        console.error('Window error:', event.message, event.filename, event.lineno, event.colno, event.error);
-        updateDebugStatus('Window error: ' + event.message);
-      });
-
-      window.addEventListener('load', function () {
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.register('ServiceWorker.js').catch(function (err) {
-            console.warn('ServiceWorker registration failed:', err);
-          });
+      window.addEventListener("load", function () {
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.register("ServiceWorker.js");
         }
       });
 
-      var container = document.querySelector('#unity-container');
-      var canvas = document.querySelector('#unity-canvas');
-      var loadingBar = document.querySelector('#unity-loading-bar');
-      var progressBarFull = document.querySelector('#unity-progress-bar-full');
-      var warningBanner = document.querySelector('#unity-warning');
+      var container = document.querySelector("#unity-container");
+      var canvas = document.querySelector("#unity-canvas");
+      var loadingBar = document.querySelector("#unity-loading-bar");
+      var progressBarFull = document.querySelector("#unity-progress-bar-full");
+      var warningBanner = document.querySelector("#unity-warning");
 
+      // Shows a temporary message banner/ribbon for a few seconds, or
+      // a permanent error message on top of the canvas if type=='error'.
+      // If type=='warning', a yellow highlight color is used.
+      // Modify or remove this function to customize the visually presented
+      // way that non-critical warnings and error messages are presented to the
+      // user.
       function unityShowBanner(msg, type) {
         function updateBannerVisibility() {
           warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
@@ -98,64 +57,46 @@
         updateBannerVisibility();
       }
 
-      var buildUrl = 'Build';
-      var loaderUrl = buildUrl + '/CareerCoach.loader.js';
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/CareerCoach.loader.js";
       var config = {
-        dataUrl: buildUrl + '/CareerCoach.data',
-        frameworkUrl: buildUrl + '/CareerCoach.framework.js',
-        codeUrl: buildUrl + '/CareerCoach.wasm',
-        streamingAssetsUrl: 'StreamingAssets',
-        companyName: 'DefaultCompany',
-        productName: 'Web_TFGPro',
-        productVersion: '0.1.0',
+        dataUrl: buildUrl + "/CareerCoach.data",
+        frameworkUrl: buildUrl + "/CareerCoach.framework.js",
+        codeUrl: buildUrl + "/CareerCoach.wasm",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "Web_TFGPro",
+        productVersion: "0.1.0",
         showBanner: unityShowBanner,
       };
 
+      // By default Unity keeps WebGL canvas render target size matched with
+      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
+      // Set this to false if you want to decouple this synchronization from
+      // happening inside the engine, and you would instead like to size up
+      // the canvas DOM size and WebGL render target sizes yourself.
+      // config.matchWebGLToCanvasSize = false;
+
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        // Mobile device style: fill the whole browser client area with the game canvas:
         var meta = document.createElement('meta');
         meta.name = 'viewport';
         meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
         document.getElementsByTagName('head')[0].appendChild(meta);
       }
 
-      loadingBar.style.display = 'block';
-      updateDebugStatus('Preparing WebGL loader...');
+      loadingBar.style.display = "block";
 
-      var params = getUrlParams();
-      console.log('CareerCoach URL params:', params);
-      updateDebugStatus('URL params loaded: jobId=' + params.jobId);
-
-      var script = document.createElement('script');
+      var script = document.createElement("script");
       script.src = loaderUrl;
       script.onload = () => {
-        console.log('CareerCoach loader script loaded:', loaderUrl);
-        updateDebugStatus('Loader script loaded, creating Unity instance...');
         createUnityInstance(canvas, config, (progress) => {
-          progressBarFull.style.width = 100 * progress + '%';
+          progressBarFull.style.width = 100 * progress + "%";
         }).then((unityInstance) => {
-    loadingBar.style.display = "none";
-
-    const params = new URLSearchParams(window.location.search);
-    const jobId = params.get("jobId");
-
-    console.log("Job ID from URL:", jobId);
-
-    unityInstance.SendMessage(
-        "InterviewManager",
-        "SetJobId",
-        jobId
-    );
-
+          loadingBar.style.display = "none";
         }).catch((message) => {
-          console.error('Unity error:', message);
-          updateDebugStatus('Unity creation failed: ' + message);
-          alert('Failed to load Career Coach: ' + message);
+          alert(message);
         });
-      };
-      script.onerror = function () {
-        console.error('Failed to load loader script:', loaderUrl);
-        updateDebugStatus('Loader script failed to load');
-        alert('Failed to load Career Coach loader script.');
       };
       document.body.appendChild(script);
     </script>
