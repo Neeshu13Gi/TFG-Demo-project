@@ -468,6 +468,45 @@ body {
     border: none;
 }
 
+/* Career Coach WebGL Styles */
+.career-webgl-placeholder {
+    background: #f0f0f0;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    color: #666;
+}
+
+.career-webgl-placeholder p {
+    margin: 0.5rem 0;
+}
+
+.career-webgl-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+}
+
+.career-webgl-toolbar {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 2100;
+}
+
+.career-fullscreen-frame {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
 /* =====================
    LOADING SPINNER
    ===================== */

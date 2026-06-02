@@ -614,7 +614,63 @@ function startCareerInterview(jobId) {
     const webglUrl = `${basePath}/CareerCoach/index.html?jobId=${job._id}&jobTitle=${jobTitle}&jobDescription=${jobDesc}&jobSkills=${jobSkills}&jobExperience=${jobExp}`;
     console.log(`🎯 Launching CareerCoach interview:`, webglUrl);
     showToast(`Opening interview for ${job.title}`, 'success');
-    window.location.href = webglUrl;
+    
+    // Load CareerCoach WebGL in iframe (same as modules)
+    const placeholder = document.querySelector('.career-webgl-placeholder');
+    placeholder.innerHTML = `
+        <div class="career-webgl-fullscreen">
+            <div class="career-webgl-toolbar">
+                <button class="btn btn-secondary" onclick="closeCareerCoach()">Close Interview</button>
+            </div>
+            <iframe 
+                id="careerCoachIframe"
+                src="${webglUrl}"
+                class="career-fullscreen-frame"
+                allowfullscreen
+                allow="fullscreen"
+                sandbox="allow-same-origin allow-scripts allow-popups allow-pointer-lock allow-modals allow-top-navigation-by-user-activation allow-fullscreen"
+            ></iframe>
+        </div>
+    `;
+    
+    document.getElementById('careerCoachContainer').style.display = 'block';
+    document.getElementById('startCareerInterviewBtn').style.display = 'none';
+
+    const iframe = document.getElementById('careerCoachIframe');
+    if (iframe && iframe.requestFullscreen) {
+        iframe.requestFullscreen().catch((error) => {
+            console.warn('Unable to request fullscreen for CareerCoach iframe:', error);
+        });
+    }
+}
+
+function closeCareerCoach() {
+    const careerContainer = document.getElementById('careerCoachContainer');
+    const placeholder = document.querySelector('.career-webgl-placeholder');
+    const iframe = document.getElementById('careerCoachIframe');
+
+    if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
+        const exitFullscreen = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+        if (exitFullscreen) {
+            exitFullscreen.call(document);
+        }
+    }
+
+    if (iframe) {
+        iframe.src = 'about:blank';
+    }
+
+    if (placeholder) {
+        placeholder.innerHTML = `
+            <p>🎤 Career Coach interview loading...</p>
+        `;
+    }
+
+    if (careerContainer) {
+        careerContainer.style.display = 'none';
+    }
+    
+    document.getElementById('startCareerInterviewBtn').style.display = 'block';
 }
 
 // =====================
