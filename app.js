@@ -522,7 +522,8 @@ function startCareerInterview(jobId) {
     const jobDesc = encodeURIComponent(job.description);
     const jobSkills = encodeURIComponent(job.skills.join(', '));
     const jobExp = encodeURIComponent(job.experience);
-    const webglUrl = `/CareerCoach/index.html?jobId=${job._id}&jobTitle=${jobTitle}&jobDescription=${jobDesc}&jobSkills=${jobSkills}&jobExperience=${jobExp}`;
+    const basePath = window.location.pathname.split('/').slice(0, -1).join('/') || '';
+    const webglUrl = `${basePath}/CareerCoach/index.html?jobId=${job._id}&jobTitle=${jobTitle}&jobDescription=${jobDesc}&jobSkills=${jobSkills}&jobExperience=${jobExp}`;
     console.log(`🎯 Launching CareerCoach interview:`, webglUrl);
     showToast(`Opening interview for ${job.title}`, 'success');
     window.location.href = webglUrl;
