@@ -20,6 +20,162 @@
       </div>
       <div id="unity-warning"> </div>
     </div>
+
+    <!-- LOG VIEWER PANEL -->
+    <div id="logPanel" style="position: fixed; bottom: 20px; right: 20px; width: 350px; max-height: 300px; background: #1e1e1e; border: 1px solid #333; border-radius: 4px; color: #d4d4d4; font-family: 'Courier New', monospace; font-size: 11px; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: none; flex-direction: column;">
+      <div style="padding: 8px 12px; background: #2d2d2d; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; cursor: move;">
+        <span style="font-weight: bold; color: #4CAF50;">📋 Session Logs</span>
+        <button id="closeLogBtn" style="background: none; border: none; color: #d4d4d4; cursor: pointer; font-size: 14px;">✕</button>
+      </div>
+      <div id="logContent" style="overflow-y: auto; padding: 8px 12px; flex: 1;">
+        <div style="color: #888;">Loading logs...</div>
+      </div>
+    </div>
+
+    <!-- LOG TOGGLE BUTTON -->
+    <button id="logToggle" style="position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: #4CAF50; border: none; color: white; font-size: 20px; cursor: pointer; z-index: 9999; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;">📋</button>
+
+    <script>
+      // Console Log Capture for CareerCoach Page
+      const LogStorage = (() => {
+        const STORAGE_KEY = 'sessionLogs';
+        const MAX_LOGS = 500;
+
+        function add(level, args) {
+          try {
+            let stored = sessionStorage.getItem(STORAGE_KEY);
+            let logs = stored ? JSON.parse(stored) : [];
+            
+            const timestamp = new Date().toLocaleTimeString();
+            const message = args.map(arg => 
+              typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+            ).join(' ');
+            
+            logs.push({ timestamp, level, message });
+            
+            if (logs.length > MAX_LOGS) {
+              logs = logs.slice(-MAX_LOGS);
+            }
+            
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+          } catch (e) {
+            console.warn('Failed to persist logs', e);
+          }
+        }
+
+        return { add };
+      })();
+
+      // Override console methods
+      const originalLog = console.log;
+      const originalWarn = console.warn;
+      const originalError = console.error;
+
+      console.log = function(...args) {
+        LogStorage.add('log', args);
+        originalLog.apply(console, args);
+      };
+
+      console.warn = function(...args) {
+        LogStorage.add('warn', args);
+        originalWarn.apply(console, args);
+      };
+
+      console.error = function(...args) {
+        LogStorage.add('error', args);
+        originalError.apply(console, args);
+      };
+
+      // Log Viewer Script
+      const LogViewer = (() => {
+        const STORAGE_KEY = 'sessionLogs';
+
+        function getLogs() {
+          try {
+            const stored = sessionStorage.getItem(STORAGE_KEY);
+            return stored ? JSON.parse(stored) : [];
+          } catch (e) {
+            return [];
+          }
+        }
+
+        function displayLogs() {
+          const logs = getLogs();
+          const logContent = document.getElementById('logContent');
+
+          if (logs.length === 0) {
+            logContent.innerHTML = '<div style="color: #888;">No logs available</div>';
+            return;
+          }
+
+          const logHTML = logs.map(log => {
+            let color = '#d4d4d4';
+            if (log.level === 'error') color = '#f48771';
+            else if (log.level === 'warn') color = '#dcdcaa';
+            else if (log.level === 'info') color = '#569cd6';
+
+            return `<div style="color: ${color}; margin-bottom: 4px; line-height: 1.4;">
+              <span style="color: #888;">[${log.timestamp}]</span> ${log.message}
+            </div>`;
+          }).join('');
+
+          logContent.innerHTML = logHTML;
+          logContent.scrollTop = logContent.scrollHeight;
+        }
+
+        return { getLogs, displayLogs };
+      })();
+
+      // UI Controls
+      const logPanel = document.getElementById('logPanel');
+      const logToggle = document.getElementById('logToggle');
+      const closeLogBtn = document.getElementById('closeLogBtn');
+
+      logToggle.addEventListener('click', () => {
+        if (logPanel.style.display === 'flex') {
+          logPanel.style.display = 'none';
+          logToggle.style.display = 'flex';
+        } else {
+          logPanel.style.display = 'flex';
+          logToggle.style.display = 'none';
+          LogViewer.displayLogs();
+        }
+      });
+
+      closeLogBtn.addEventListener('click', () => {
+        logPanel.style.display = 'none';
+        logToggle.style.display = 'flex';
+      });
+
+      // Make log panel draggable
+      let isDragging = false;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      document.querySelector('[style*="cursor: move"]').addEventListener('mousedown', (e) => {
+        isDragging = true;
+        offsetX = e.clientX - logPanel.offsetLeft;
+        offsetY = e.clientY - logPanel.offsetTop;
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+          logPanel.style.right = 'auto';
+          logPanel.style.bottom = 'auto';
+          logPanel.style.left = (e.clientX - offsetX) + 'px';
+          logPanel.style.top = (e.clientY - offsetY) + 'px';
+        }
+      });
+
+      document.addEventListener('mouseup', () => {
+        isDragging = false;
+      });
+
+      // Display logs on page load
+      window.addEventListener('load', () => {
+        LogViewer.displayLogs();
+      });
+    </script>
     <script>
       window.addEventListener("load", function () {
         if ("serviceWorker" in navigator) {

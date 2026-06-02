@@ -4,6 +4,94 @@
  */
 
 // =====================
+// CONSOLE LOG PERSISTENCE
+// =====================
+const LogStorage = (() => {
+    const STORAGE_KEY = 'sessionLogs';
+    const MAX_LOGS = 500;
+    let logs = [];
+
+    // Initialize logs from sessionStorage
+    function init() {
+        try {
+            const stored = sessionStorage.getItem(STORAGE_KEY);
+            logs = stored ? JSON.parse(stored) : [];
+        } catch (e) {
+            logs = [];
+        }
+    }
+
+    // Add a log entry
+    function add(level, args) {
+        const timestamp = new Date().toLocaleTimeString();
+        const message = args.map(arg => 
+            typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+        ).join(' ');
+        
+        logs.push({ timestamp, level, message });
+        
+        // Keep only the last MAX_LOGS entries
+        if (logs.length > MAX_LOGS) {
+            logs = logs.slice(-MAX_LOGS);
+        }
+        
+        // Persist to sessionStorage
+        try {
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+        } catch (e) {
+            console.warn('Failed to persist logs to sessionStorage', e);
+        }
+    }
+
+    // Get all logs
+    function getAll() {
+        return logs;
+    }
+
+    // Clear logs
+    function clear() {
+        logs = [];
+        try {
+            sessionStorage.removeItem(STORAGE_KEY);
+        } catch (e) {
+            console.warn('Failed to clear logs from sessionStorage', e);
+        }
+    }
+
+    return { init, add, getAll, clear };
+})();
+
+// Override console methods to capture logs
+(() => {
+    LogStorage.init();
+    
+    const originalLog = console.log;
+    const originalWarn = console.warn;
+    const originalError = console.error;
+    const originalInfo = console.info;
+
+    console.log = function(...args) {
+        LogStorage.add('log', args);
+        originalLog.apply(console, args);
+    };
+
+    console.warn = function(...args) {
+        LogStorage.add('warn', args);
+        originalWarn.apply(console, args);
+    };
+
+    console.error = function(...args) {
+        LogStorage.add('error', args);
+        originalError.apply(console, args);
+    };
+
+    console.info = function(...args) {
+        LogStorage.add('info', args);
+        originalInfo.apply(console, args);
+    };
+})();
+
+// =====================
 // CONFIGURATION
 // =====================
 // Use same-origin in production; localhost in development
