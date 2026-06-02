@@ -7,30 +7,64 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- NAVBAR -->
-    <nav class="navbar">
-        <div class="container">
-            <div class="navbar-brand">
-                <h1>TFG</h1>
-            </div>
-            <div class="navbar-menu" id="navbarMenu">
-                <div class="user-info" id="userInfo" style="display: none;">
-                    <span id="userName"></span>
-                    <button class="btn btn-nav" onclick="showDashboard()">Dashboard</button>
-                    <button class="btn btn-nav" onclick="showCareerCoach()">Career Coach</button>
-                    <button class="btn btn-nav" onclick="showReports()">Reports</button>
-                    <button class="btn btn-logout" onclick="logout()">Logout</button>
-                </div>
-                <div class="auth-links" id="authLinks">
-                    <button class="btn btn-primary" onclick="showLoginForm()">Login</button>
-                    <button class="btn btn-secondary" onclick="showRegisterForm()">Register</button>
-                </div>
-            </div>
+    <div class="app-layout">
+      <!-- SIDEBAR -->
+      <aside class="app-sidebar">
+        <div class="sidebar-top">
+          <div class="logo">TFG</div>
+          <div class="logo-text">Talent Fourth Group</div>
         </div>
-    </nav>
+        <nav class="sidebar-nav">
+          <button class="btn btn-nav" onclick="showDashboard()">Dashboard</button>
+          <button class="btn btn-nav" onclick="showCareerCoach()">Career Coach</button>
+          <button class="btn btn-nav" onclick="showReports()">Reports</button>
+          <button class="btn btn-nav" onclick="showModules()">Training</button>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="avatar">NG</div>
+          <div class="user-meta">
+            <div class="user-name">Neeshu</div>
+            <div class="user-email">neeshu@gmail.com</div>
+          </div>
+        </div>
+      </aside>
 
-    <!-- MAIN CONTAINER -->
-    <div class="container">
+      <!-- MAIN AREA -->
+      <main class="app-main">
+        <!-- NAVBAR -->
+        <nav class="navbar">
+            <div class="container">
+                <div class="navbar-brand">
+                    <h1>TFG</h1>
+                </div>
+                <div class="navbar-menu" id="navbarMenu">
+                    <div class="user-info" id="userInfo" style="display: none;">
+                        <span id="userName"></span>
+                        <button class="btn btn-nav" onclick="showDashboard()">Dashboard</button>
+                        <button class="btn btn-nav" onclick="showCareerCoach()">Career Coach</button>
+                        <button class="btn btn-nav" onclick="showReports()">Reports</button>
+                        <button class="btn btn-logout" onclick="logout()">Logout</button>
+                    </div>
+                    <div class="auth-links" id="authLinks">
+                        <button class="btn btn-primary" onclick="showLoginForm()">Login</button>
+                        <button class="btn btn-secondary" onclick="showRegisterForm()">Register</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- MAIN CONTAINER -->
+        <div class="container">
+            <!-- HERO / PAGE HEADER -->
+            <header class="hero">
+                <div class="hero-inner">
+                    <h2>Career Coach — Practice interviews with AI</h2>
+                    <p class="hero-sub">Select a role and launch an in-page interview simulation to improve confidence and get feedback.</p>
+                </div>
+                <div class="hero-actions">
+                    <button class="btn btn-primary" onclick="showCareerCoach()">Browse Jobs</button>
+                </div>
+            </header>
         <!-- AUTH SECTION -->
         <section id="authSection" class="auth-section">
             <!-- LOGIN FORM -->
@@ -234,10 +268,12 @@
             </div>
         </section>
     </div>
+        </main>
+    </div>
 
-    <!-- LOADING SPINNER -->
-    <div id="loadingSpinner" class="loading-spinner" style="display: none;">
-        <div class="spinner"></div>
+        <!-- LOADING SPINNER -->
+        <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+                <div class="spinner"></div>
         <p>Loading...</p>
     </div>
 
