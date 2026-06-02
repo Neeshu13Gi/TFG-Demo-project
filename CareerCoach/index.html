@@ -242,18 +242,39 @@
       }
 
       loadingBar.style.display = "block";
+      console.log('🎮 Starting CareerCoach Unity WebGL initialization...');
 
       var script = document.createElement("script");
       script.src = loaderUrl;
+      
       script.onload = () => {
+        console.log('✅ CareerCoach loader script loaded successfully');
+        console.log('📦 Creating Unity instance with config:', config);
+        
         createUnityInstance(canvas, config, (progress) => {
+          console.log(`📊 Loading progress: ${Math.round(progress * 100)}%`);
           progressBarFull.style.width = 100 * progress + "%";
         }).then((unityInstance) => {
+          console.log('✅ Unity instance created successfully');
           loadingBar.style.display = "none";
         }).catch((message) => {
-          alert(message);
+          console.error('❌ Unity instance creation failed:', message);
+          alert('Failed to load Career Coach: ' + message);
+          loadingBar.style.display = "none";
         });
       };
+      
+      script.onerror = () => {
+        console.error(`❌ Failed to load CareerCoach loader from: ${loaderUrl}`);
+        console.error('Attempted paths:');
+        console.error(`  - ${window.location.href.split('/').slice(0, -1).join('/')}/${loaderUrl}`);
+        console.error(`  - Current directory: ${window.location.href}`);
+        loadingBar.style.display = "none";
+        showToast = (msg, type) => alert(msg);
+        showToast('Error: Failed to load Career Coach build files', 'error');
+      };
+      
+      console.log(`📁 Attempting to load: ${loaderUrl}`);
       document.body.appendChild(script);
     </script>
   </body>
