@@ -574,8 +574,7 @@ function renderCareerJobs() {
                     <span>Skills: ${job.skills.join(', ')}</span>
                 </div>
                 <div class="job-actions">
-                    <button class="btn btn-secondary" onclick="showCareerJobDetail('${job._id}')">View Job</button>
-                    <button class="btn btn-primary" onclick="startCareerInterview('${job._id}')">Start Interview</button>
+                    <button class="btn btn-primary" onclick="showCareerJobDetail('${job._id}')">View Job</button>
                 </div>
             </div>
         </div>
