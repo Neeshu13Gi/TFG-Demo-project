@@ -462,6 +462,21 @@ body {
 
 .app-main{flex:1}
 .app-main .container{padding-top:20px;padding-bottom:40px}
+.dashboard-container { padding-top: 2rem; }
+
+/* Dashboard Header */
+.dashboard-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
+.dashboard-header h1 { font-size: 2rem; color: var(--accent); margin: 0.5rem 0 0 0; }
+.dashboard-header .eyebrow { display: block; font-size: 0.85rem; color: #999; margin-bottom: 0.25rem; text-transform: uppercase; }
+.header-badge { background: linear-gradient(90deg, var(--primary) 0%, var(--primary-600) 100%); color: #111; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.9rem; font-weight: 600; }
+
+/* Summary Stats */
+.summary-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
+.stat-card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06); }
+.stat-card .stat-label { display: block; font-size: 0.9rem; color: #666; margin-bottom: 0.75rem; }
+.stat-card .stat-value { font-size: 2.5rem; color: var(--primary); display: block; line-height: 1; }
+.stat-card.stat-secondary { background: linear-gradient(135deg, #f8f6ea 0%, #fff 100%); border: 1px solid rgba(255, 179, 0, 0.1); }
+.stat-card.stat-secondary .stat-value { color: var(--primary-600); }
 
 /* Make primary actions stand out */
 .job-actions .btn-primary{font-weight:700}

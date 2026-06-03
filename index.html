@@ -54,17 +54,36 @@
         </nav>
 
         <!-- MAIN CONTAINER -->
-        <div class="container">
-            <!-- HERO / PAGE HEADER -->
-            <header class="hero">
-                <div class="hero-inner">
-                    <h2>Career Coach — Practice interviews with AI</h2>
-                    <p class="hero-sub">Select a role and launch an in-page interview simulation to improve confidence and get feedback.</p>
+        <div class="container dashboard-container">
+            <!-- WELCOME HEADER -->
+            <header class="dashboard-header">
+                <div>
+                    <p class="eyebrow">Welcome Back</p>
+                    <h1>Welcome, Neeshu</h1>
                 </div>
-                <div class="hero-actions">
-                    <button class="btn btn-primary" onclick="showCareerCoach()">Browse Jobs</button>
-                </div>
+                <div class="header-badge">Pro User</div>
             </header>
+
+            <!-- SUMMARY STATS -->
+            <section class="summary-stats">
+                <div class="stat-card">
+                    <span class="stat-label">Learning Modules Completed</span>
+                    <strong class="stat-value">2</strong>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Modules in Progress</span>
+                    <strong class="stat-value">2</strong>
+                </div>
+                <div class="stat-card stat-secondary">
+                    <span class="stat-label">Total Courses Available</span>
+                    <strong class="stat-value">8</strong>
+                </div>
+                <div class="stat-card stat-secondary">
+                    <span class="stat-label">Total Courses Available</span>
+                    <strong class="stat-value\">8</strong>
+                </div>
+            </section>
+
         <!-- AUTH SECTION -->
         <section id="authSection" class="auth-section">
             <!-- LOGIN FORM -->
@@ -141,6 +160,18 @@
                     <p>🎤 Career Coach interview loading...</p>
                 </div>
             </div>
+        </section>
+
+        <!-- TRAINING ZONE SECTION -->
+        <section id="trainingZoneSection" class="training-zone-section">
+            <div class="section-header">
+                <div>
+                    <p class="eyebrow">Training Zone</p>
+                    <h2>Recommended Learning Paths</h2>
+                </div>
+                <button class="btn btn-outline" onclick="showModules()">See all courses</button>
+            </div>
+            <div id="trainingZoneList" class="training-zone-grid"></div>
         </section>
 
         <!-- MODULES SECTION -->
