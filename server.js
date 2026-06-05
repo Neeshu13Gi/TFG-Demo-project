@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import axios from 'axios';
 import path from 'path';
+import fs from 'fs';
 
 // Load local .env values during development.
 // Render will supply GROQ_API_KEY from its environment variables.
@@ -293,12 +294,24 @@ app.get('/jobs/:id', (req, res) => {
 // =====================
 
 app.get('/reports', (req, res) => {
-
   res.status(200).json({
     success: true,
-    data: []
+    data: reports
   });
+});
 
+app.post('/reports', (req, res) => {
+  const report = req.body;
+  if (!report || typeof report !== 'object') {
+    return res.status(400).json({ success: false, message: 'Report body is required' });
+  }
+
+  report._id = report._id || generateId();
+  report.createdAt = new Date().toISOString();
+  reports.push(report);
+  persistReportToDisk(report);
+
+  res.status(201).json({ success: true, data: report });
 });
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -422,6 +435,8 @@ app.get('/health', (req, res) => {
     environment: process.env.NODE_ENV || 'development'
   });
 });
+
+loadReportsFromDisk();
 
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
