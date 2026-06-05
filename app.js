@@ -975,7 +975,7 @@ async function getReportById(reportId) {
 
         const report = await response.json();
         console.log('✅ Report fetched:', report);
-        return report;
+        return report.data;
     } catch (error) {
         console.error('❌ Error fetching report:', error);
         return null;
