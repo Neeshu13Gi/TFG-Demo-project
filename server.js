@@ -33,8 +33,6 @@ app.use(cors({
 }));
 
 app.use(express.json());
-// Serve static files from root directory
-app.use(express.static(path.resolve()));
 
 const ensureGroqApiKey = () => {
   if (!GROQ_API_KEY) {
@@ -293,10 +291,16 @@ app.get('/jobs/:id', (req, res) => {
 // REPORT ROUTES
 // =====================
 
+const enrichReport = (report) => {
+  if (!report || typeof report.module !== 'string') return report;
+  const mod = STATIC_MODULES.find(m => m._id === report.module);
+  return { ...report, module: mod || { _id: report.module, title: 'Unknown Module' } };
+};
+
 app.get('/reports', (req, res) => {
   res.status(200).json({
     success: true,
-    data: reports
+    data: reports.map(enrichReport)
   });
 });
 
@@ -305,7 +309,7 @@ app.get('/reports/:id', (req, res) => {
   if (!report) {
     return res.status(404).json({ success: false, message: 'Report not found' });
   }
-  res.status(200).json({ success: true, data: report });
+  res.status(200).json({ success: true, data: enrichReport(report) });
 });
 
 app.post('/reports', (req, res) => {
@@ -319,7 +323,7 @@ app.post('/reports', (req, res) => {
   reports.push(report);
   persistReportToDisk(report);
 
-  res.status(201).json({ success: true, data: report });
+  res.status(201).json({ success: true, data: enrichReport(report) });
 });
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -443,6 +447,9 @@ app.get('/health', (req, res) => {
     environment: process.env.NODE_ENV || 'development'
   });
 });
+
+// Static files served AFTER API routes so /reports and other paths aren't intercepted
+app.use(express.static(path.resolve()));
 
 loadReportsFromDisk();
 
