@@ -10,73 +10,117 @@
     <div class="app-layout">
       <!-- SIDEBAR -->
       <aside class="app-sidebar">
-        <div class="sidebar-top">
-          <div class="logo">TFG</div>
-          <div class="logo-text">Talent Fourth Group</div>
+        <div class="sidebar-brand">
+          <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+            <rect width="40" height="40" rx="8" fill="#FFD324"/>
+            <text x="20" y="27" font-family="Arial Black,Arial" font-size="11" font-weight="900" fill="#111" text-anchor="middle">TFG</text>
+          </svg>
+          <div class="sidebar-logo-text">
+            <span>TALENT</span>
+            <span>FOURTH GEN GROUP</span>
+          </div>
         </div>
-        <nav class="sidebar-nav">
-          <button class="btn btn-nav" onclick="showDashboard()">Dashboard</button>
-          <button class="btn btn-nav" onclick="showCareerCoach()">Career Coach</button>
-          <button class="btn btn-nav" onclick="showReports()">Reports</button>
-          <button class="btn btn-nav" onclick="showModules()">Training</button>
+
+        <nav class="sidebar-nav" id="sidebarNav">
+          <button class="nav-item active" id="nav-dashboard" onclick="showDashboard();setActiveNav('nav-dashboard')">
+            <svg class="nav-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Dashboard
+          </button>
+          <button class="nav-item" id="nav-training" onclick="showModules();setActiveNav('nav-training')">
+            <svg class="nav-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
+            Training
+          </button>
+          <button class="nav-item" id="nav-reports" onclick="showReports();setActiveNav('nav-reports')">
+            <svg class="nav-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            Reports
+          </button>
+          <button class="nav-item" id="nav-career" onclick="showCareerCoach();setActiveNav('nav-career')">
+            <svg class="nav-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+            Career Coach
+          </button>
+          <button class="nav-item" id="nav-product">
+            <svg class="nav-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            Product Training
+          </button>
         </nav>
-        <div class="sidebar-footer">
-          <div class="avatar">NG</div>
-          <div class="user-meta">
-            <div class="user-name">Neeshu</div>
-            <div class="user-email">neeshu@gmail.com</div>
+
+        <div class="sidebar-section-label">SETTINGS</div>
+        <nav class="sidebar-nav">
+          <button class="nav-item">
+            <svg class="nav-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Settings
+          </button>
+          <button class="nav-item">
+            <svg class="nav-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Help Center
+          </button>
+          <button class="nav-item" onclick="logout()">
+            <svg class="nav-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Log Out
+          </button>
+        </nav>
+
+        <div class="sidebar-user" id="sidebarUser">
+          <div class="sidebar-avatar" id="sidebarAvatar"></div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="sidebarUserName"></div>
+            <div class="sidebar-user-email" id="sidebarUserEmail"></div>
           </div>
         </div>
       </aside>
 
       <!-- MAIN AREA -->
       <main class="app-main">
-        <!-- NAVBAR -->
-        <nav class="navbar">
-            <div class="container">
-                <div class="navbar-brand">
-                    <h1>TFG</h1>
-                </div>
-                <div class="navbar-menu" id="navbarMenu">
-                    <div class="user-info" id="userInfo" style="display: none;">
-                        <span id="userName"></span>
-                        <button class="btn btn-nav" onclick="showDashboard()">Dashboard</button>
-                        <button class="btn btn-nav" onclick="showCareerCoach()">Career Coach</button>
-                        <button class="btn btn-nav" onclick="showReports()">Reports</button>
-                        <button class="btn btn-logout" onclick="logout()">Logout</button>
-                    </div>
-                    <div class="auth-links" id="authLinks">
-                        <button class="btn btn-primary" onclick="showLoginForm()">Login</button>
-                        <button class="btn btn-secondary" onclick="showRegisterForm()">Register</button>
-                    </div>
-                </div>
-            </div>
-        </nav>
+        <!-- Hidden legacy nav elements kept for JS compatibility -->
+        <div id="userInfo" style="display:none"><span id="userName"></span></div>
+        <div id="authLinks" style="display:none"></div>
 
         <!-- MAIN CONTAINER -->
         <div class="container dashboard-container">
-            <!-- WELCOME HEADER -->
-            <header class="dashboard-header">
+            <!-- PAGE TITLE BAR -->
+            <div class="page-title-bar" id="pageTitleBar">
+                <h1 class="page-title" id="pageTitle">Dashboard</h1>
+                <button class="bell-btn" aria-label="Notifications">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                </button>
+            </div>
+
+            <!-- DARK WELCOME BANNER -->
+            <div class="welcome-banner" id="welcomeBanner" style="display:none">
                 <div>
-                    <p class="eyebrow">Welcome Back</p>
-                    <h1>Welcome, Neeshu</h1>
+                    <h2 class="welcome-banner-title" id="welcomeBannerName">Welcome, Neeshu Gautam</h2>
+                    <p class="welcome-banner-sub">Based on your profile, we've curated a path just for you.</p>
                 </div>
-                <div class="header-badge">Pro User</div>
-            </header>
+            </div>
 
             <!-- SUMMARY STATS -->
-            <section class="summary-stats">
+            <section class="summary-stats" id="summaryStats" style="display:none">
                 <div class="stat-card">
-                    <span class="stat-label">Learning Modules Completed</span>
-                    <strong class="stat-value">2</strong>
+                    <div class="stat-info">
+                        <span class="stat-label">Learning Modules<br>Completed</span>
+                        <strong class="stat-value" id="statCompleted">2</strong>
+                    </div>
+                    <div class="stat-icon stat-icon-green">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-label">Modules in Progress</span>
-                    <strong class="stat-value">2</strong>
+                    <div class="stat-info">
+                        <span class="stat-label">Modules in Progress</span>
+                        <strong class="stat-value stat-green" id="statInProgress">2</strong>
+                    </div>
+                    <div class="stat-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 11 21 7 17 3"/><line x1="21" y1="7" x2="9" y2="7"/><polyline points="7 21 3 17 7 13"/><line x1="15" y1="17" x2="3" y2="17"/></svg>
+                    </div>
                 </div>
-                <div class="stat-card stat-secondary">
-                    <span class="stat-label">Total Courses Available</span>
-                    <strong class="stat-value">8</strong>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <span class="stat-label">Total Courses Available</span>
+                        <strong class="stat-value stat-red" id="statTotal">3</strong>
+                    </div>
+                    <div class="stat-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                    </div>
                 </div>
             </section>
 
@@ -172,44 +216,47 @@
 
         <!-- MODULES SECTION -->
         <section id="modulesSection" class="modules-section" style="display: none;">
-            <h2>Available Modules</h2>
+            <div class="modules-section-header">
+                <h2 class="modules-section-title">Training Modules</h2>
+                <div class="sort-control">
+                    <label>Sort by:</label>
+                    <select class="sort-select">
+                        <option>Skill Type</option>
+                        <option>Duration</option>
+                        <option>Score</option>
+                    </select>
+                </div>
+            </div>
             <div id="modulesList" class="modules-grid"></div>
         </section>
 
         <!-- MODULE DETAIL SECTION -->
         <section id="moduleDetailSection" class="module-detail" style="display: none;">
-            <button class="btn btn-back" onclick="backToModules()">← Back to Modules</button>
-            <div class="module-header">
+            <div class="module-breadcrumb" id="moduleBreadcrumb"></div>
+            <div class="module-detail-header">
                 <h2 id="moduleDetailTitle"></h2>
+                <span class="completion-badge" id="completionBadge">0% Completed</span>
+            </div>
+            <hr class="module-divider">
+            <div class="module-brief">
+                <strong class="brief-label">Brief:</strong>
                 <p id="moduleDetailDescription"></p>
             </div>
-            <div class="module-info">
-                <div class="info-item">
-                    <strong>Duration:</strong>
-                    <span id="moduleDetailDuration"></span>
-                </div>
-                <div class="info-item">
-                    <strong>Total Lessons:</strong>
-                    <span id="moduleDetailLessons"></span>
-                </div>
-                <div class="info-item">
-                    <strong>Type:</strong>
-                    <span id="moduleDetailType"></span>
-                </div>
+            <div class="submodules-section">
+                <h3 class="subcategory-label">SUB CATEGORY (MODULES)</h3>
+                <ul id="submodulesList" class="submodules-list"></ul>
             </div>
-            <div class="submodules">
-                <h3>Submodules</h3>
-                <ul id="submodulesList"></ul>
-            </div>
-            <button class="btn btn-primary btn-block" id="launchBtn" onclick="launchUnityWebGL()">Launch Module</button>
+            <button class="btn-continue" id="launchBtn" onclick="launchUnityWebGL()">Continue Module</button>
             <div id="unityContainer" style="display: none; margin-top: 20px;">
-                <h3>Unity WebGL Player</h3>
                 <div class="unity-webgl-placeholder">
-                    <p>🎮 Unity WebGL content would load here</p>
                     <p id="moduleIdDisplay"></p>
-                    <p style="font-size: 12px; color: #999;">Module ID: <code id="moduleIdCode"></code></p>
+                    <p style="font-size:12px;color:#999">Module ID: <code id="moduleIdCode"></code></p>
                 </div>
             </div>
+            <!-- hidden compat fields -->
+            <span id="moduleDetailDuration" style="display:none"></span>
+            <span id="moduleDetailLessons" style="display:none"></span>
+            <span id="moduleDetailType" style="display:none"></span>
         </section>
 
         <!-- REPORTS SECTION -->

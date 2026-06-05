@@ -171,12 +171,42 @@ document.addEventListener('DOMContentLoaded', () => {
     if (savedToken && savedUser) {
         currentUser = JSON.parse(savedUser);
         console.log('✅ User restored from localStorage:', currentUser.email, currentUser.token?.substring(0, 20));
+        unlockSidebar();
         showDashboard();
     } else {
         console.log('📝 No active session. Showing auth screen.');
+        lockSidebar();
         showLoginForm();
     }
 });
+
+// =====================
+// SIDEBAR HELPERS
+// =====================
+function lockSidebar() {
+    document.querySelector('.app-sidebar')?.classList.add('sidebar-locked');
+}
+
+function unlockSidebar() {
+    document.querySelector('.app-sidebar')?.classList.remove('sidebar-locked');
+}
+
+function setActiveNav(id) {
+    document.querySelectorAll('#sidebarNav .nav-item').forEach(el => el.classList.remove('active'));
+    const el = document.getElementById(id);
+    if (el) el.classList.add('active');
+}
+
+function updateSidebarUser(user) {
+    if (!user) return;
+    const initials = (user.name || 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    const avatarEl = document.getElementById('sidebarAvatar');
+    const nameEl   = document.getElementById('sidebarUserName');
+    const emailEl  = document.getElementById('sidebarUserEmail');
+    if (avatarEl) avatarEl.textContent = initials;
+    if (nameEl)   nameEl.textContent   = user.name || '';
+    if (emailEl)  emailEl.textContent  = user.email || '';
+}
 
 // =====================
 // AUTH UI MANAGEMENT
@@ -217,19 +247,34 @@ function showDashboard() {
     document.getElementById('reportsSection').style.display = 'none';
     document.getElementById('reportDetailSection').style.display = 'none';
     const trainingZone = document.getElementById('trainingZoneSection');
-    if (trainingZone) trainingZone.style.display = 'block';
-    
-    // Update navbar
-    document.getElementById('authLinks').style.display = 'none';
-    document.getElementById('userInfo').style.display = 'flex';
-    document.getElementById('userName').textContent = currentUser.name;
-    
-    // Show welcome message
-    document.getElementById('welcomeMessage').style.display = 'block';
-    document.getElementById('welcomeName').textContent = currentUser.name;
-    
+    if (trainingZone) trainingZone.style.display = 'none';
+
+    updateSidebarUser(currentUser);
+    setActiveNav('nav-dashboard');
+
+    // Welcome banner
+    const banner = document.getElementById('welcomeBanner');
+    const bannerName = document.getElementById('welcomeBannerName');
+    if (banner) banner.style.display = 'block';
+    if (bannerName) bannerName.textContent = `Welcome, ${currentUser?.name || 'User'}`;
+
+    // Stats
+    const statsEl = document.getElementById('summaryStats');
+    if (statsEl) statsEl.style.display = 'grid';
+
+    // Page title
+    const pt = document.getElementById('pageTitle');
+    if (pt) pt.textContent = 'Dashboard';
+
     // Fetch and display modules
     fetchModules();
+}
+
+function hideDashboardExtras() {
+    const banner = document.getElementById('welcomeBanner');
+    const stats  = document.getElementById('summaryStats');
+    if (banner) banner.style.display = 'none';
+    if (stats)  stats.style.display  = 'none';
 }
 
 function showModules() {
@@ -244,11 +289,13 @@ function showModules() {
     document.getElementById('welcomeMessage').style.display = 'none';
     const trainingZone = document.getElementById('trainingZoneSection');
     if (trainingZone) trainingZone.style.display = 'none';
+    hideDashboardExtras();
 
-    // Update navbar
-    document.getElementById('authLinks').style.display = 'none';
-    document.getElementById('userInfo').style.display = 'flex';
-    if (currentUser?.name) document.getElementById('userName').textContent = currentUser.name;
+    const pt = document.getElementById('pageTitle');
+    if (pt) pt.textContent = 'Training';
+
+    updateSidebarUser(currentUser);
+    setActiveNav('nav-training');
 
     if (allModules.length > 0) {
         renderModules(allModules);
@@ -354,8 +401,8 @@ async function handleLogin(event) {
         console.log('✅ Login successful!', currentUser.email);
         showToast('Login successful!', 'success');
         showLoading(false);
-        
-        // Show dashboard after a short delay
+        unlockSidebar();
+
         setTimeout(() => {
             showDashboard();
         }, 500);
@@ -380,9 +427,10 @@ function logout() {
     console.log('✅ Logout successful');
     showToast('Logged out successfully', 'success');
     
-    // Reset UI
-    document.getElementById('userInfo').style.display = 'none';
-    document.getElementById('authLinks').style.display = 'flex';
+    // Lock sidebar and reset user display
+    lockSidebar();
+    updateSidebarUser({ name: '', email: '' });
+    setActiveNav('');
     
     // Show login form
     setTimeout(() => {
@@ -425,6 +473,8 @@ async function fetchModules() {
             document.getElementById('modulesList').innerHTML = '<p><em>No modules available</em></p>';
         } else {
             renderModules(allModules);
+            const totalEl = document.getElementById('statTotal');
+            if (totalEl) totalEl.textContent = allModules.length;
         }
 
         showLoading(false);
@@ -452,24 +502,44 @@ function renderModules(modules) {
         return;
     }
 
+    const scoreLabels = ['Excellent', 'Average', 'Needs Improvement'];
+    const scoreClasses = ['', 'avg', 'needs-imp'];
+
     modules.forEach((module, index) => {
         const moduleCard = document.createElement('div');
         moduleCard.className = 'module-card';
-        moduleCard.onclick = () => showModuleDetail(module?._id);
 
-        const title = module?.title || 'Untitled Module';
-        const description = module?.description || 'No description available';
-        const duration = module?.duration || 'N/A';
-        const totalLessons = module?.totalLessons ?? 0;
+        const title  = module?.title || 'Untitled Module';
+        const letter = title.trim()[0]?.toUpperCase() || '?';
+        const type   = module?.type || 'WEB';
+
+        // Simulated lesson % and score for display
+        const lessonPcts  = [78, 61, 26];
+        const scoreIdx    = [1, 1, 2];
+        const pct   = lessonPcts[index % lessonPcts.length];
+        const score = scoreLabels[scoreIdx[index % scoreIdx.length]];
+        const scoreCls = scoreClasses[scoreIdx[index % scoreIdx.length]];
 
         moduleCard.innerHTML = `
-            <div class="module-thumbnail">📚</div>
+            <div class="module-thumbnail">
+                <span class="module-thumb-letter">${letter}</span>
+                <span class="module-type-badge">${type}</span>
+            </div>
             <div class="module-content">
                 <h3>${title}</h3>
-                <p>${description}</p>
-                <div class="module-meta">
-                    <span>⏱️ ${duration}</span>
-                    <span>📝 ${totalLessons} lessons</span>
+                <div class="module-stats">
+                    <div class="module-stat-row">
+                        <span class="module-stat-label">Lesson Completed</span>
+                        <span class="module-stat-val">${pct}%</span>
+                    </div>
+                    <div class="module-stat-row">
+                        <span class="module-stat-label">Overall Score</span>
+                        <span class="module-stat-val ${scoreCls}">${score}</span>
+                    </div>
+                </div>
+                <div class="module-card-actions">
+                    <button class="btn-card-continue" onclick="event.stopPropagation();showModuleDetail('${module?._id}')">Continue</button>
+                    <button class="btn-card-result" onclick="event.stopPropagation();showReports()">View Result</button>
                 </div>
             </div>
         `;
@@ -505,53 +575,60 @@ async function showModuleDetail(moduleId) {
         }
 
         // Critical elements
-        const titleEl = document.getElementById('moduleDetailTitle');
-        const descEl = document.getElementById('moduleDetailDescription');
-        const durationEl = document.getElementById('moduleDetailDuration');
-        const lessonsEl = document.getElementById('moduleDetailLessons');
-        const typeEl = document.getElementById('moduleDetailType');
-        const submodulesList = document.getElementById('submodulesList');
+        const titleEl         = document.getElementById('moduleDetailTitle');
+        const descEl          = document.getElementById('moduleDetailDescription');
+        const submodulesList  = document.getElementById('submodulesList');
+        const breadcrumbEl    = document.getElementById('moduleBreadcrumb');
+        const badgeEl         = document.getElementById('completionBadge');
 
-        if (!titleEl || !descEl || !durationEl || !lessonsEl || !typeEl || !submodulesList) {
+        if (!titleEl || !descEl || !submodulesList) {
             throw new Error('Required DOM elements for module detail not found');
         }
 
-        // Optional element
-        const idEl = document.getElementById('moduleIdCode');
-
-        // Fill in module data with safe defaults
+        // Breadcrumb + title
+        if (breadcrumbEl) breadcrumbEl.textContent = currentModule.title || '';
         titleEl.textContent = currentModule.title || 'Untitled Module';
-        descEl.textContent = currentModule.description || 'No description available';
-        durationEl.textContent = currentModule.duration || 'N/A';
-        lessonsEl.textContent = currentModule.totalLessons ?? 0;
-        typeEl.textContent = currentModule.type || 'Unknown';
+        descEl.textContent  = currentModule.description || 'No description available';
 
+        const idEl = document.getElementById('moduleIdCode');
         if (idEl) idEl.textContent = currentModule._id || 'N/A';
 
-        // Render submodules
-        submodulesList.innerHTML = '';
+        // Progress tracking via localStorage
+        const progressKey = `progress_${currentModule._id}`;
+        let completedIds = [];
+        try { completedIds = JSON.parse(localStorage.getItem(progressKey) || '[]'); } catch {}
 
         const submodules = Array.isArray(currentModule.submodules) ? currentModule.submodules : [];
+        submodulesList.innerHTML = '';
+
         if (submodules.length > 0) {
-            console.log(`📚 Rendering ${submodules.length} submodules`);
+            // Determine in-progress: first submodule not yet completed
+            const inProgressIdx = submodules.findIndex(s => !completedIds.includes(s._id));
+
             submodules.forEach((sub, index) => {
+                const isDone       = completedIds.includes(sub._id);
+                const isInProgress = index === inProgressIdx;
+                const statusClass  = isDone ? 'completed' : isInProgress ? 'in-progress' : 'pending';
+                const icon         = isDone ? '✓' : isInProgress ? '☆' : '○';
+
                 const li = document.createElement('li');
-                li.style.marginBottom = '0.5rem';
-
-                const button = document.createElement('button');
-                button.className = 'btn btn-outline';
-                button.style.width = '100%';
-                button.style.textAlign = 'left';
-                button.textContent = `${index + 1}. ${sub?.title || 'Untitled Submodule'}`;
-                button.onclick = () => showToast(`Submodule selected: ${sub?.title || 'Untitled'}`, 'success');
-
-                li.appendChild(button);
+                li.innerHTML = `
+                    <div class="submodule-bar ${statusClass}">
+                        <span class="submodule-icon">${icon}</span>
+                        <span>${sub.title || 'Untitled Submodule'}</span>
+                    </div>`;
                 submodulesList.appendChild(li);
             });
+
+            // Completion badge
+            const pct = submodules.length ? Math.round((completedIds.length / submodules.length) * 100) : 0;
+            if (badgeEl) badgeEl.textContent = `${pct}% Completed`;
         } else {
-            console.warn('⚠️ No submodules available for this module');
-            submodulesList.innerHTML = '<li><em>No submodules available</em></li>';
+            submodulesList.innerHTML = '<li style="color:#aaa;font-size:.9rem">No submodules available</li>';
+            if (badgeEl) badgeEl.textContent = '0% Completed';
         }
+
+        setActiveNav('nav-training');
 
         // Toggle UI sections
         document.getElementById('modulesSection').style.display = 'none';
@@ -589,8 +666,11 @@ function showCareerCoach() {
     document.getElementById('reportDetailSection').style.display = 'none';
     const trainingZone = document.getElementById('trainingZoneSection');
     if (trainingZone) trainingZone.style.display = 'none';
-    document.getElementById('authLinks').style.display = 'none';
-    document.getElementById('userInfo').style.display = 'flex';
+    hideDashboardExtras();
+    const pt = document.getElementById('pageTitle');
+    if (pt) pt.textContent = 'Career Coach';
+    updateSidebarUser(currentUser);
+    setActiveNav('nav-career');
     renderCareerJobs();
 }
 
@@ -997,10 +1077,12 @@ async function showReports() {
     document.getElementById('reportDetailSection').style.display = 'none';
     const trainingZone = document.getElementById('trainingZoneSection');
     if (trainingZone) trainingZone.style.display = 'none';
+    hideDashboardExtras();
+    const pt = document.getElementById('pageTitle');
+    if (pt) pt.textContent = 'Reports';
 
-    // Update navbar
-    document.getElementById('authLinks').style.display = 'none';
-    document.getElementById('userInfo').style.display = 'flex';
+    updateSidebarUser(currentUser);
+    setActiveNav('nav-reports');
 
     showLoading(true);
     const reports = await getUserReports();
