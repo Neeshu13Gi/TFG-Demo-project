@@ -300,6 +300,14 @@ app.get('/reports', (req, res) => {
   });
 });
 
+app.get('/reports/:id', (req, res) => {
+  const report = reports.find(r => r._id === req.params.id);
+  if (!report) {
+    return res.status(404).json({ success: false, message: 'Report not found' });
+  }
+  res.status(200).json({ success: true, data: report });
+});
+
 app.post('/reports', (req, res) => {
   const report = req.body;
   if (!report || typeof report !== 'object') {
