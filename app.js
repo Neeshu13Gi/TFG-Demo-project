@@ -188,6 +188,8 @@ function showLoginForm() {
     document.getElementById('welcomeMessage').style.display = 'none';
     document.getElementById('modulesSection').style.display = 'none';
     document.getElementById('moduleDetailSection').style.display = 'none';
+    const trainingZone = document.getElementById('trainingZoneSection');
+    if (trainingZone) trainingZone.style.display = 'none';
     document.getElementById('authSection').style.display = 'flex';
     clearLoginForm();
 }
@@ -199,6 +201,8 @@ function showRegisterForm() {
     document.getElementById('welcomeMessage').style.display = 'none';
     document.getElementById('modulesSection').style.display = 'none';
     document.getElementById('moduleDetailSection').style.display = 'none';
+    const trainingZone = document.getElementById('trainingZoneSection');
+    if (trainingZone) trainingZone.style.display = 'none';
     document.getElementById('authSection').style.display = 'flex';
     clearRegisterForm();
 }
@@ -212,6 +216,8 @@ function showDashboard() {
     document.getElementById('careerJobDetailSection').style.display = 'none';
     document.getElementById('reportsSection').style.display = 'none';
     document.getElementById('reportDetailSection').style.display = 'none';
+    const trainingZone = document.getElementById('trainingZoneSection');
+    if (trainingZone) trainingZone.style.display = 'block';
     
     // Update navbar
     document.getElementById('authLinks').style.display = 'none';
@@ -224,6 +230,33 @@ function showDashboard() {
     
     // Fetch and display modules
     fetchModules();
+}
+
+function showModules() {
+    console.log('📚 Showing modules (Training)');
+    document.getElementById('authSection').style.display = 'none';
+    document.getElementById('modulesSection').style.display = 'block';
+    document.getElementById('moduleDetailSection').style.display = 'none';
+    document.getElementById('careerSection').style.display = 'none';
+    document.getElementById('careerJobDetailSection').style.display = 'none';
+    document.getElementById('reportsSection').style.display = 'none';
+    document.getElementById('reportDetailSection').style.display = 'none';
+    document.getElementById('welcomeMessage').style.display = 'none';
+    const trainingZone = document.getElementById('trainingZoneSection');
+    if (trainingZone) trainingZone.style.display = 'none';
+
+    // Update navbar
+    document.getElementById('authLinks').style.display = 'none';
+    document.getElementById('userInfo').style.display = 'flex';
+    if (currentUser?.name) document.getElementById('userName').textContent = currentUser.name;
+
+    if (allModules.length > 0) {
+        renderModules(allModules);
+    } else {
+        fetchModules();
+    }
+
+    document.getElementById('modulesSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // =====================
@@ -524,6 +557,8 @@ async function showModuleDetail(moduleId) {
         document.getElementById('modulesSection').style.display = 'none';
         document.getElementById('welcomeMessage').style.display = 'none';
         document.getElementById('moduleDetailSection').style.display = 'block';
+        const trainingZone = document.getElementById('trainingZoneSection');
+        if (trainingZone) trainingZone.style.display = 'none';
 
     } catch (error) {
         console.error('❌ Error loading module detail:', error);
@@ -538,6 +573,8 @@ function backToModules() {
     document.getElementById('careerSection').style.display = 'none';
     document.getElementById('careerJobDetailSection').style.display = 'none';
     document.getElementById('modulesSection').style.display = 'block';
+    const trainingZone = document.getElementById('trainingZoneSection');
+    if (trainingZone) trainingZone.style.display = 'none';
     currentModule = null;
 }
 
@@ -550,6 +587,8 @@ function showCareerCoach() {
     document.getElementById('careerJobDetailSection').style.display = 'none';
     document.getElementById('reportsSection').style.display = 'none';
     document.getElementById('reportDetailSection').style.display = 'none';
+    const trainingZone = document.getElementById('trainingZoneSection');
+    if (trainingZone) trainingZone.style.display = 'none';
     document.getElementById('authLinks').style.display = 'none';
     document.getElementById('userInfo').style.display = 'flex';
     renderCareerJobs();
@@ -956,6 +995,8 @@ async function showReports() {
     document.getElementById('moduleDetailSection').style.display = 'none';
     document.getElementById('reportsSection').style.display = 'block';
     document.getElementById('reportDetailSection').style.display = 'none';
+    const trainingZone = document.getElementById('trainingZoneSection');
+    if (trainingZone) trainingZone.style.display = 'none';
 
     // Update navbar
     document.getElementById('authLinks').style.display = 'none';
