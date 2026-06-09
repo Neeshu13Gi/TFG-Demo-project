@@ -389,6 +389,67 @@ app.get('/users/me', (req, res) => {
 });
 
 // =====================
+// CAREER COACH REPORT ENDPOINT
+// =====================
+app.post('/career-coach/report', async (req, res) => {
+  try {
+    const { userName, jobTitle, interviewType, responses } = req.body;
+
+    if (!jobTitle) {
+      return res.status(400).json({ success: false, message: 'jobTitle is required' });
+    }
+
+    const responsesText = Array.isArray(responses) && responses.length
+      ? responses.map((r, i) => `Q${i + 1}: ${r.question}\nA${i + 1}: ${r.answer}`).join('\n')
+      : 'No interview responses provided — generate realistic scores for this role.';
+
+    const prompt = `You are an expert AI career coach. Evaluate the following mock interview and return ONLY a valid JSON object — no markdown, no explanation, just the raw JSON.
+
+Candidate: ${userName || 'Candidate'}
+Applied Role: ${jobTitle}
+Interview Type: ${interviewType || 'HR + Technical + Behavioral'}
+Interview Q&A:
+${responsesText}
+
+Return this exact JSON structure:
+{
+  "scores": { "communication": <60-100>, "confidence": <60-100>, "technicalSkills": <60-100>, "problemSolving": <60-100> },
+  "strengths": ["<strength 1>","<strength 2>","<strength 3>","<strength 4>","<strength 5>"],
+  "areasToImprove": ["<area 1>","<area 2>","<area 3>","<area 4>","<area 5>"],
+  "questionReview": [{"question":"<question text>","feedback":"<one sentence feedback>"}],
+  "summary": "<2-3 sentence summary ending with: Overall Interview Readiness Score: XX%>",
+  "overallScore": <60-100>
+}`;
+
+    const payload = {
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 900,
+      temperature: 0.7,
+      top_p: 0.95
+    };
+
+    const result = await requestGroqChatCompletion(payload);
+    const content = result.choices?.[0]?.message?.content || '';
+
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return res.status(500).json({ success: false, message: 'AI returned unexpected format' });
+    }
+
+    const reportData = JSON.parse(jsonMatch[0]);
+    reportData.userName = userName || 'Candidate';
+    reportData.appliedRole = jobTitle;
+    reportData.interviewType = interviewType || 'HR + Technical + Behavioral';
+    reportData.generatedAt = new Date().toISOString();
+
+    return res.status(200).json({ success: true, data: reportData });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// =====================
 // GROQ API ENDPOINTS
 // =====================
 

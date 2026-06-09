@@ -194,6 +194,7 @@
                 <div class="info-item"><strong>Skills:</strong> <span id="careerJobSkills"></span></div>
             </div>
             <button class="btn btn-primary btn-block" id="startCareerInterviewBtn" onclick="startCareerInterview(currentCareerJob ? currentCareerJob._id : null)">Start Interview</button>
+            <button class="btn btn-outline" id="generateReportBtn" style="margin-top: 12px; display: none;" onclick="generateCareerReport()">📊 Generate Interview Report</button>
             <div id="careerCoachContainer" style="display: none; margin-top: 20px;">
                 <h3>Career Coach Interview</h3>
                 <div class="career-webgl-placeholder">
@@ -265,6 +266,55 @@
             <button class="btn btn-back" onclick="showDashboard()">← Back to Dashboard</button>
             <div id="reportsList" class="reports-grid">
                 <p style="text-align: center; padding: 40px;">No reports yet. Complete a training module to generate a report.</p>
+            </div>
+        </section>
+
+        <!-- CAREER COACH REPORT SECTION -->
+        <section id="careerReportSection" class="career-report-section" style="display: none;">
+            <button class="btn btn-back" onclick="showCareerCoach()">← Back to Career Coach</button>
+
+            <div class="cr-header">
+                <div class="cr-header-left">
+                    <h2 class="cr-title">TFG Interview Report</h2>
+                    <div class="cr-user-row">
+                        <div class="cr-avatar" id="crAvatar"></div>
+                        <div class="cr-user-details">
+                            <div class="cr-name" id="crUserName"></div>
+                            <div class="cr-meta">Applied Role: <span id="crAppliedRole"></span></div>
+                            <div class="cr-meta">Interview Type: <span id="crInterviewType"></span></div>
+                        </div>
+                    </div>
+                </div>
+                <span class="cr-completed-badge">Interview Completed</span>
+            </div>
+
+            <div class="cr-scores-grid" id="crScoresGrid"></div>
+
+            <div class="cr-two-col">
+                <div class="cr-panel">
+                    <h4>Strengths</h4>
+                    <ul id="crStrengths" class="cr-list"></ul>
+                </div>
+                <div class="cr-panel">
+                    <h4>Areas To Improve</h4>
+                    <ul id="crAreasToImprove" class="cr-list"></ul>
+                </div>
+            </div>
+
+            <div class="cr-section">
+                <h3>Interview Question Review</h3>
+                <div id="crQuestionReview"></div>
+            </div>
+
+            <div class="cr-summary-box">
+                <h4>AI Interview Summary</h4>
+                <p id="crSummaryText"></p>
+            </div>
+
+            <div class="cr-actions">
+                <button class="btn cr-btn-download" onclick="downloadCareerReport()">⬇ Download PDF Report</button>
+                <button class="btn cr-btn-retake" id="crRetakeBtn">↺ Retake Interview</button>
+                <button class="btn cr-btn-apply" onclick="showCareerCoach()">🚀 Apply For Jobs</button>
             </div>
         </section>
 

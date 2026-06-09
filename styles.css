@@ -760,6 +760,226 @@ body {
 }
 
 /* =====================
+   CAREER COACH REPORT
+   ===================== */
+.career-report-section {
+    padding: 1.5rem 0;
+}
+
+.cr-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    background: #fff;
+    border: 1.5px solid #eee;
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.cr-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+}
+
+.cr-user-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.cr-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #555;
+    flex-shrink: 0;
+}
+
+.cr-user-details .cr-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #222;
+}
+
+.cr-user-details .cr-meta {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 2px;
+}
+
+.cr-completed-badge {
+    background: #1a9e5a;
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.35rem 0.85rem;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.cr-scores-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.cr-score-card {
+    background: #fffde7;
+    border: 1.5px solid #f0e080;
+    border-radius: 10px;
+    padding: 1.1rem;
+    text-align: center;
+}
+
+.cr-score-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #e6a800;
+    line-height: 1.1;
+}
+
+.cr-score-label {
+    font-size: 0.82rem;
+    color: #888;
+    margin-top: 0.3rem;
+}
+
+.cr-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.cr-panel {
+    background: #fff;
+    border: 1.5px solid #eee;
+    border-radius: 10px;
+    padding: 1.1rem 1.25rem;
+}
+
+.cr-panel h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 0.75rem;
+}
+
+.cr-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.cr-list li {
+    font-size: 0.875rem;
+    color: #444;
+    padding: 0.25rem 0;
+    line-height: 1.4;
+}
+
+.cr-section {
+    background: #fff;
+    border: 1.5px solid #eee;
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.cr-section h3 {
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 0.9rem;
+}
+
+.cr-question-item {
+    background: #fafafa;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.65rem;
+}
+
+.cr-question-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 0.35rem;
+}
+
+.cr-question-feedback {
+    font-size: 0.85rem;
+    color: #555;
+    line-height: 1.45;
+}
+
+.cr-summary-box {
+    background: #fffde7;
+    border: 1.5px solid #f0e080;
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.cr-summary-box h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 0.6rem;
+}
+
+.cr-summary-box p {
+    font-size: 0.875rem;
+    color: #444;
+    line-height: 1.6;
+}
+
+.cr-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.cr-btn-download {
+    background: var(--primary);
+    color: #111;
+    font-weight: 600;
+}
+
+.cr-btn-retake {
+    background: #222;
+    color: #fff;
+    font-weight: 600;
+}
+
+.cr-btn-retake:hover {
+    background: #444;
+}
+
+.cr-btn-apply {
+    background: var(--primary);
+    color: #111;
+    font-weight: 600;
+}
+
+@media (max-width: 680px) {
+    .cr-scores-grid { grid-template-columns: repeat(2, 1fr); }
+    .cr-two-col { grid-template-columns: 1fr; }
+    .cr-header { flex-direction: column; gap: 0.75rem; }
+}
+
+/* =====================
    LOADING SPINNER
    ===================== */
 .loading-spinner {

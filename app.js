@@ -246,6 +246,7 @@ function showDashboard() {
     document.getElementById('careerJobDetailSection').style.display = 'none';
     document.getElementById('reportsSection').style.display = 'none';
     document.getElementById('reportDetailSection').style.display = 'none';
+    document.getElementById('careerReportSection').style.display = 'none';
     const trainingZone = document.getElementById('trainingZoneSection');
     if (trainingZone) trainingZone.style.display = 'none';
 
@@ -286,6 +287,7 @@ function showModules() {
     document.getElementById('careerJobDetailSection').style.display = 'none';
     document.getElementById('reportsSection').style.display = 'none';
     document.getElementById('reportDetailSection').style.display = 'none';
+    document.getElementById('careerReportSection').style.display = 'none';
     document.getElementById('welcomeMessage').style.display = 'none';
     const trainingZone = document.getElementById('trainingZoneSection');
     if (trainingZone) trainingZone.style.display = 'none';
@@ -664,6 +666,7 @@ function showCareerCoach() {
     document.getElementById('careerJobDetailSection').style.display = 'none';
     document.getElementById('reportsSection').style.display = 'none';
     document.getElementById('reportDetailSection').style.display = 'none';
+    document.getElementById('careerReportSection').style.display = 'none';
     const trainingZone = document.getElementById('trainingZoneSection');
     if (trainingZone) trainingZone.style.display = 'none';
     hideDashboardExtras();
@@ -836,6 +839,108 @@ function startCareerInterview(jobId) {
     }, 100);
 }
 
+function showGenerateReportBtn() {
+    const btn = document.getElementById('generateReportBtn');
+    if (btn) btn.style.display = 'inline-block';
+}
+
+async function generateCareerReport() {
+    const job = currentCareerJob;
+    if (!job) {
+        showToast('No active interview job found', 'error');
+        return;
+    }
+
+    showLoading(true);
+    try {
+        const response = await fetch(`${API_URL}/career-coach/report`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userName: currentUser?.name || 'Candidate',
+                jobTitle: job.title,
+                interviewType: 'HR + Technical + Behavioral',
+                responses: []
+            })
+        });
+
+        const data = await response.json();
+        showLoading(false);
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Failed to generate report');
+        }
+
+        showCareerReport(data.data);
+    } catch (error) {
+        showLoading(false);
+        showToast(`Failed to generate report: ${error.message}`, 'error');
+    }
+}
+
+function showCareerReport(data) {
+    document.getElementById('authSection').style.display = 'none';
+    document.getElementById('modulesSection').style.display = 'none';
+    document.getElementById('moduleDetailSection').style.display = 'none';
+    document.getElementById('careerSection').style.display = 'none';
+    document.getElementById('careerJobDetailSection').style.display = 'none';
+    document.getElementById('reportsSection').style.display = 'none';
+    document.getElementById('reportDetailSection').style.display = 'none';
+    document.getElementById('careerReportSection').style.display = 'block';
+    const trainingZone = document.getElementById('trainingZoneSection');
+    if (trainingZone) trainingZone.style.display = 'none';
+    hideDashboardExtras();
+
+    const pt = document.getElementById('pageTitle');
+    if (pt) pt.textContent = 'Interview Report';
+    setActiveNav('nav-career');
+
+    const initials = (data.userName || 'C').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    document.getElementById('crAvatar').textContent = initials;
+    document.getElementById('crUserName').textContent = data.userName || 'Candidate';
+    document.getElementById('crAppliedRole').textContent = data.appliedRole || '';
+    document.getElementById('crInterviewType').textContent = data.interviewType || '';
+
+    const scoreLabels = [
+        { key: 'communication', label: 'Communication' },
+        { key: 'confidence', label: 'Confidence' },
+        { key: 'technicalSkills', label: 'Technical Skills' },
+        { key: 'problemSolving', label: 'Problem Solving' }
+    ];
+    const scoresGrid = document.getElementById('crScoresGrid');
+    scoresGrid.innerHTML = scoreLabels.map(({ key, label }) => `
+        <div class="cr-score-card">
+            <div class="cr-score-value">${data.scores?.[key] ?? '--'}%</div>
+            <div class="cr-score-label">${label}</div>
+        </div>
+    `).join('');
+
+    const strengthsEl = document.getElementById('crStrengths');
+    strengthsEl.innerHTML = (data.strengths || []).map(s => `<li>• ${s}</li>`).join('');
+
+    const areasEl = document.getElementById('crAreasToImprove');
+    areasEl.innerHTML = (data.areasToImprove || []).map(a => `<li>• ${a}</li>`).join('');
+
+    const reviewEl = document.getElementById('crQuestionReview');
+    reviewEl.innerHTML = (data.questionReview || []).map((item, i) => `
+        <div class="cr-question-item">
+            <div class="cr-question-title">${i + 1}. ${item.question}</div>
+            <div class="cr-question-feedback">${item.feedback}</div>
+        </div>
+    `).join('');
+
+    document.getElementById('crSummaryText').textContent = data.summary || '';
+
+    const retakeBtn = document.getElementById('crRetakeBtn');
+    if (retakeBtn && currentCareerJob) {
+        retakeBtn.onclick = () => showCareerJobDetail(currentCareerJob._id);
+    }
+}
+
+function downloadCareerReport() {
+    showToast('PDF download coming soon', 'info');
+}
+
 function closeCareerCoach() {
     const careerContainer = document.getElementById('careerCoachContainer');
     const placeholder = document.querySelector('.career-webgl-placeholder');
@@ -861,8 +966,9 @@ function closeCareerCoach() {
     if (careerContainer) {
         careerContainer.style.display = 'none';
     }
-    
+
     document.getElementById('startCareerInterviewBtn').style.display = 'block';
+    showGenerateReportBtn();
 }
 
 // =====================
@@ -1069,12 +1175,13 @@ async function showReports() {
     console.log('📊 Showing reports section');
     console.log('🔐 Current user:', currentUser);
     console.log('🔐 Token in localStorage:', localStorage.getItem(TOKEN_KEY) ? 'EXISTS' : 'MISSING');
-    
+
     document.getElementById('authSection').style.display = 'none';
     document.getElementById('modulesSection').style.display = 'none';
     document.getElementById('moduleDetailSection').style.display = 'none';
     document.getElementById('reportsSection').style.display = 'block';
     document.getElementById('reportDetailSection').style.display = 'none';
+    document.getElementById('careerReportSection').style.display = 'none';
     const trainingZone = document.getElementById('trainingZoneSection');
     if (trainingZone) trainingZone.style.display = 'none';
     hideDashboardExtras();
