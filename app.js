@@ -853,7 +853,7 @@ async function generateCareerReport() {
 
     showLoading(true);
     try {
-        const response = await fetch(`${API_URL}/career-coach/report`, {
+        const response = await fetch(`${API_URL}/InterviewReport`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

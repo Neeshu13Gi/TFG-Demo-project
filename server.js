@@ -391,7 +391,7 @@ app.get('/users/me', (req, res) => {
 // =====================
 // CAREER COACH REPORT ENDPOINT
 // =====================
-app.post('/career-coach/report', async (req, res) => {
+app.post('/InterviewReport', async (req, res) => {
   try {
     const { userName, jobTitle, interviewType, responses } = req.body;
 
