@@ -1,9 +1,9 @@
 const cacheName = "DefaultCompany-Web_TFGPro-0.1.0";
 const contentToCache = [
-    "Build/CareerCoach.loader.js",
-    "Build/CareerCoach.framework.js",
-    "Build/CareerCoach.data",
-    "Build/CareerCoach.wasm",
+    "Build/TFGWeb(20-02-26).loader.js",
+    "Build/TFGWeb(20-02-26).framework.js",
+    "Build/TFGWeb(20-02-26).data",
+    "Build/TFGWeb(20-02-26).wasm",
     "TemplateData/style.css"
 
 ];
