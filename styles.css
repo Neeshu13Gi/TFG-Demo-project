@@ -759,6 +759,17 @@ body {
     border: none;
 }
 
+.career-webgl-fullscreen:fullscreen,
+.career-webgl-fullscreen:-webkit-full-screen {
+    width: 100vw;
+    height: 100vh;
+}
+
+.career-webgl-fullscreen:fullscreen .career-fullscreen-frame,
+.career-webgl-fullscreen:-webkit-full-screen .career-fullscreen-frame {
+    height: 100%;
+}
+
 /* =====================
    CAREER COACH REPORT
    ===================== */

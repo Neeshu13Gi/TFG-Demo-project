@@ -794,6 +794,13 @@ function startCareerInterview(jobId) {
     console.log('📱 Showing container and hiding button...');
     container.style.display = 'block';
     document.getElementById('startCareerInterviewBtn').style.display = 'none';
+
+    const fullscreenTarget = container.querySelector('.career-webgl-fullscreen') || container;
+    if (fullscreenTarget.requestFullscreen) {
+        fullscreenTarget.requestFullscreen().catch(() => {});
+    } else if (fullscreenTarget.webkitRequestFullscreen) {
+        fullscreenTarget.webkitRequestFullscreen();
+    }
     
     // Wait for DOM to be ready before accessing iframe
     setTimeout(() => {
