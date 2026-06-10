@@ -126,6 +126,7 @@ let currentUser = null;
 let currentModule = null;
 let allModules = [];
 let currentCareerJob = null;
+let convaiInterviewResponses = [];
 
 const careerJobs = [
     {
@@ -177,6 +178,28 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('📝 No active session. Showing auth screen.');
         lockSidebar();
         showLoginForm();
+    }
+});
+
+// =====================
+// CONVAI IFRAME MESSAGE LISTENER
+// Captures conversation data sent from CareerCoach iframe via postMessage
+// =====================
+window.addEventListener('message', (event) => {
+    const data = event.data;
+    if (!data || typeof data !== 'object') return;
+
+    if (data.type === 'CONVAI_USER_SPEECH' && data.text) {
+        convaiInterviewResponses.push({ role: 'user', text: data.text });
+    }
+
+    if (data.type === 'CONVAI_CHAR_RESPONSE' && data.text) {
+        convaiInterviewResponses.push({ role: 'interviewer', text: data.text });
+    }
+
+    if (data.type === 'CONVAI_INTERVIEW_DONE' && Array.isArray(data.responses)) {
+        convaiInterviewResponses = data.responses;
+        showGenerateReportBtn();
     }
 });
 
@@ -738,6 +761,7 @@ function startCareerInterview(jobId) {
     
     console.log('✅ Job found:', job.title);
     currentCareerJob = job;
+    convaiInterviewResponses = [];
     const jobTitle = encodeURIComponent(job.title);
     const jobDesc = encodeURIComponent(job.description);
     const jobSkills = encodeURIComponent(job.skills.join(', '));
@@ -860,6 +884,23 @@ async function generateCareerReport() {
 
     showLoading(true);
     try {
+        // Build Q&A pairs from captured Convai conversation
+        const responses = [];
+        let i = 0;
+        while (i < convaiInterviewResponses.length) {
+            const entry = convaiInterviewResponses[i];
+            if (entry.role === 'interviewer') {
+                const next = convaiInterviewResponses[i + 1];
+                responses.push({
+                    question: entry.text,
+                    answer: (next && next.role === 'user') ? next.text : ''
+                });
+                i += (next && next.role === 'user') ? 2 : 1;
+            } else {
+                i++;
+            }
+        }
+
         const response = await fetch(`${API_URL}/InterviewReport`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -867,17 +908,35 @@ async function generateCareerReport() {
                 userName: currentUser?.name || 'Candidate',
                 jobTitle: job.title,
                 interviewType: 'HR + Technical + Behavioral',
-                responses: []
+                responses
             })
         });
 
         const data = await response.json();
-        showLoading(false);
 
         if (!response.ok || !data.success) {
             throw new Error(data.message || 'Failed to generate report');
         }
 
+        // Save report to MongoDB
+        await fetch(`${API_URL}/report`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                jobTitle: data.data.appliedRole,
+                communication: data.data.scores?.communication,
+                confidence: data.data.scores?.confidence,
+                technicalSkills: data.data.scores?.technicalSkills,
+                problemSolving: data.data.scores?.problemSolving,
+                strengths: data.data.strengths,
+                areasToImprove: data.data.areasToImprove,
+                summary: data.data.summary,
+                userName: data.data.userName,
+                overallScore: data.data.overallScore
+            })
+        }).catch(() => {}); // non-blocking — UI still works if save fails
+
+        showLoading(false);
         showCareerReport(data.data);
     } catch (error) {
         showLoading(false);

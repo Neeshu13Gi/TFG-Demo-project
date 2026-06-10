@@ -1,30 +1,37 @@
-﻿import express from 'express';
+import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import axios from 'axios';
 import path from 'path';
-import fs from 'fs';
+import mongoose from 'mongoose';
 
-// Load local .env values during development.
-// Render will supply GROQ_API_KEY from its environment variables.
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
-   const allowedOrigins = [
+// =====================
+// DATABASE CONNECTION
+// =====================
+
+mongoose.connect(process.env.MONGODB_URI || '')
+  .then(() => console.log('✅ MongoDB connected'))
+  .catch(e => console.error('❌ MongoDB connection failed:', e.message));
+
+// =====================
+// CORS & MIDDLEWARE
+// =====================
+
+const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5500',
   'https://tfg-demo-project.onrender.com'
 ];
 
-// CORS MUST come before routes
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
     return callback(new Error('CORS policy does not allow this origin'));
   },
   credentials: true,
@@ -34,10 +41,12 @@ app.use(cors({
 
 app.use(express.json());
 
+// =====================
+// GROQ HELPERS
+// =====================
+
 const ensureGroqApiKey = () => {
-  if (!GROQ_API_KEY) {
-    throw new Error('GROQ_API_KEY is not configured in environment variables');
-  }
+  if (!GROQ_API_KEY) throw new Error('GROQ_API_KEY is not configured in environment variables');
   return GROQ_API_KEY;
 };
 
@@ -47,10 +56,7 @@ const requestGroqChatCompletion = async (payload) => {
     'https://api.groq.com/openai/v1/chat/completions',
     payload,
     {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      },
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       timeout: 30000
     }
   );
@@ -59,10 +65,7 @@ const requestGroqChatCompletion = async (payload) => {
 
 const createGroqPayload = (body, defaultMaxTokens = 400) => {
   const messages = body.messages || (body.prompt ? [{ role: 'user', content: body.prompt }] : []);
-  if (!messages.length) {
-    throw new Error('Request body must include prompt or messages');
-  }
-
+  if (!messages.length) throw new Error('Request body must include prompt or messages');
   return {
     model: body.model || 'llama-3.3-70b-versatile',
     messages,
@@ -73,68 +76,55 @@ const createGroqPayload = (body, defaultMaxTokens = 400) => {
 };
 
 // =====================
-// IN-MEMORY USER STORAGE
+// MONGOOSE MODELS
 // =====================
-let users = [
-  { 
-    _id: 'test_user_001', 
-    name: 'Test User', 
-    email: 'test@example.com', 
-    password: 'test123', 
-    avatarUrl: '', 
-    role: 'user', 
-    token: 'PERSISTENT_TEST_TOKEN_001' 
-  }
-];
 
-let employees = []; // Employee records for VR training
-let reports = []; // Training reports storage
+const userSchema = new mongoose.Schema({
+  name: String,
+  email: { type: String, unique: true, sparse: true },
+  password: String,
+  avatarUrl: { type: String, default: '' },
+  role: { type: String, default: 'user' },
+  token: String,
+}, { timestamps: true });
 
-const loadReportsFromDisk = () => {
-  try {
-    const reportsDir = path.join(path.resolve(), 'reports');
-    if (!fs.existsSync(reportsDir)) return;
+const User = mongoose.model('User', userSchema);
 
-    const files = fs.readdirSync(reportsDir).filter(f => f.toLowerCase().endsWith('.json'));
-    const loaded = [];
+// Flexible schema — stores any fields Unity/web sends for training module reports
+const trainingReportSchema = new mongoose.Schema(
+  { _id: { type: String } },
+  { strict: false, timestamps: true }
+);
+const TrainingReport = mongoose.model('TrainingReport', trainingReportSchema);
 
-    for (const file of files) {
-      try {
-        const raw = fs.readFileSync(path.join(reportsDir, file), 'utf8');
-        const obj = JSON.parse(raw);
-        if (obj && obj._id) loaded.push(obj);
-      } catch {
-        // ignore invalid json files
-      }
-    }
+// Career coach interview report saved from Unity after generation
+const interviewReportSchema = new mongoose.Schema({
+  jobTitle: String,
+  communication: Number,
+  confidence: Number,
+  technicalSkills: Number,
+  problemSolving: Number,
+  strengths: [String],
+  areasToImprove: [String],
+  summary: String,
+}, { timestamps: true });
+const InterviewReport = mongoose.model('InterviewReport', interviewReportSchema);
 
-    // Deduplicate by _id, prefer newest (disk)
-    const byId = new Map();
-    for (const r of [...reports, ...loaded]) byId.set(r._id, r);
-    reports = Array.from(byId.values());
-    console.log(`📦 Loaded reports from disk: ${loaded.length} (total in memory: ${reports.length})`);
-  } catch (e) {
-    console.warn(`⚠️ Failed loading reports from disk: ${e.message}`);
-  }
+// =====================
+// HELPERS
+// =====================
+
+const generateId = () => Math.random().toString(36).substr(2, 9);
+const generateToken = () => `TOKEN_${Date.now()}_${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const extractAuthToken = (authHeader) => {
+  if (!authHeader || typeof authHeader !== 'string') return null;
+  return authHeader.trim().replace(/^bearer\s+/i, '').trim() || null;
 };
 
-const persistReportToDisk = (report) => {
-  try {
-    const reportsDir = path.join(path.resolve(), 'reports');
-    if (!fs.existsSync(reportsDir)) {
-      fs.mkdirSync(reportsDir, { recursive: true });
-    }
-
-    const safeTitle = (report?.module?.title || 'Report').replace(/[^a-zA-Z0-9-_]/g, '_');
-    const filename = `${safeTitle}_${report._id}.json`;
-    const filePath = path.join(reportsDir, filename);
-    fs.writeFileSync(filePath, JSON.stringify(report, null, 2), 'utf8');
-    return filename;
-  } catch (e) {
-    console.warn(`⚠️ Could not save report to file: ${e.message}`);
-    return null;
-  }
-};
+// =====================
+// STATIC DATA
+// =====================
 
 const STATIC_MODULES = [
   {
@@ -194,47 +184,6 @@ const STATIC_MODULES = [
   }
 ];
 
-// =====================
-// MODULE ENDPOINTS
-// =====================
-
-// GET ALL MODULES
-app.get('/modules', (req, res) => {
-
-  res.status(200).json(STATIC_MODULES);
-
-});
-
-
-// GET MODULE BY ID
-app.get('/modules/:id', (req, res) => {
-
-  const module =
-    STATIC_MODULES.find(
-      m => m._id === req.params.id
-    );
-
-  if (!module) {
-
-    return res.status(404).json({
-      success: false,
-      message: 'Module not found'
-    });
-
-  }
-
-  res.status(200).json({
-    success: true,
-    data: module
-  });
-
-});
-
-
-// =====================
-// JOB ROUTES FOR CAREER COACH
-// =====================
-
 const CAREER_JOBS = [
   {
     _id: '101',
@@ -262,135 +211,136 @@ const CAREER_JOBS = [
   }
 ];
 
-// GET ALL JOBS
-app.get('/jobs', (req, res) => {
-  res.status(200).json({
-    success: true,
-    data: CAREER_JOBS
-  });
+// =====================
+// MODULE ENDPOINTS
+// =====================
+
+app.get('/modules', (req, res) => {
+  res.status(200).json(STATIC_MODULES);
 });
 
-// GET JOB BY ID
-app.get('/jobs/:id', (req, res) => {
-  const job = CAREER_JOBS.find(j => j._id === req.params.id);
-  
-  if (!job) {
-    return res.status(404).json({
-      success: false,
-      message: 'Job not found'
-    });
-  }
-  
-  res.status(200).json({
-    success: true,
-    data: job
-  });
+app.get('/modules/:id', (req, res) => {
+  const module = STATIC_MODULES.find(m => m._id === req.params.id);
+  if (!module) return res.status(404).json({ success: false, message: 'Module not found' });
+  res.status(200).json({ success: true, data: module });
 });
 
 // =====================
-// REPORT ROUTES
+// JOB ROUTES
+// =====================
+
+app.get('/jobs', (req, res) => {
+  res.status(200).json({ success: true, data: CAREER_JOBS });
+});
+
+app.get('/jobs/:id', (req, res) => {
+  const job = CAREER_JOBS.find(j => j._id === req.params.id);
+  if (!job) return res.status(404).json({ success: false, message: 'Job not found' });
+  res.status(200).json({ success: true, data: job });
+});
+
+// =====================
+// TRAINING REPORT ROUTES
 // =====================
 
 const enrichReport = (report) => {
-  if (!report || typeof report.module !== 'string') return report;
-  const mod = STATIC_MODULES.find(m => m._id === report.module);
-  return { ...report, module: mod || { _id: report.module, title: 'Unknown Module' } };
+  const obj = report.toObject ? report.toObject() : report;
+  if (!obj || typeof obj.module !== 'string') return obj;
+  const mod = STATIC_MODULES.find(m => m._id === obj.module);
+  return { ...obj, module: mod || { _id: obj.module, title: 'Unknown Module' } };
 };
 
-app.get('/reports', (req, res) => {
-  res.status(200).json({
-    success: true,
-    data: reports.map(enrichReport)
-  });
-});
-
-app.get('/reports/:id', (req, res) => {
-  const report = reports.find(r => r._id === req.params.id);
-  if (!report) {
-    return res.status(404).json({ success: false, message: 'Report not found' });
+app.get('/reports', async (req, res) => {
+  try {
+    const reports = await TrainingReport.find().sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: reports.map(enrichReport) });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
-  res.status(200).json({ success: true, data: enrichReport(report) });
 });
 
-app.post('/reports', (req, res) => {
-  const report = req.body;
-  if (!report || typeof report !== 'object') {
-    return res.status(400).json({ success: false, message: 'Report body is required' });
+app.get('/reports/:id', async (req, res) => {
+  try {
+    const report = await TrainingReport.findById(req.params.id);
+    if (!report) return res.status(404).json({ success: false, message: 'Report not found' });
+    res.status(200).json({ success: true, data: enrichReport(report) });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
-
-  report._id = report._id || generateId();
-  report.createdAt = new Date().toISOString();
-  reports.push(report);
-  persistReportToDisk(report);
-
-  res.status(201).json({ success: true, data: enrichReport(report) });
 });
 
-const generateId = () => Math.random().toString(36).substr(2, 9);
-const generateToken = () => `TOKEN_${Date.now()}_${Math.random().toString(36).substring(2,10).toUpperCase()}`;
-const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-const extractAuthToken = (authHeader) => {
-  if (!authHeader || typeof authHeader !== 'string') return null;
-  const trimmed = authHeader.trim();
-  return trimmed.replace(/^bearer\s+/i, '').trim() || null;
-};
+app.post('/reports', async (req, res) => {
+  try {
+    const report = new TrainingReport({
+      _id: req.body._id || generateId(),
+      ...req.body
+    });
+    await report.save();
+    res.status(201).json({ success: true, data: enrichReport(report) });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 
 // =====================
 // AUTH ENDPOINTS
 // =====================
-app.post('/auth/register', (req, res) => {
-  const { name, email, password } = req.body;
-  if (!name || !email || !password) return res.status(400).json({ success: false, message: "Name, email, and password required" });
-  if (!validateEmail(email)) return res.status(400).json({ success: false, message: "Invalid email" });
-  if (users.find(u => u.email === email)) return res.status(400).json({ success: false, message: "User already exists" });
 
-  const newUser = { _id: generateId(), name, email, password, avatarUrl: "", role: "user", token: generateToken() };
-  users.push(newUser);
-  const { password: _, ...userResponse } = newUser;
-  res.status(201).json({ success: true, data: userResponse });
-});
+app.post('/auth/register', async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) return res.status(400).json({ success: false, message: 'Name, email, and password required' });
+    if (!validateEmail(email)) return res.status(400).json({ success: false, message: 'Invalid email' });
+    if (await User.findOne({ email })) return res.status(400).json({ success: false, message: 'User already exists' });
 
-app.post('/auth/login', (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ success: false, message: "Email and password required" });
-  
-  let user = users.find(u => u.email === email && u.password === password);
-  
-  if (!user) {
-    user = { 
-      _id: generateId(), 
-      name: email.split('@')[0], 
-      email, 
-      password, 
-      avatarUrl: '', 
-      role: 'user', 
-      token: null 
-    };
-    users.push(user);
+    const user = await new User({ name, email, password, token: generateToken() }).save();
+    const { password: _, ...userResponse } = user.toObject();
+    res.status(201).json({ success: true, data: userResponse });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
-
-  user.token = generateToken();
-  const { password: _, ...userResponse } = user;
-  res.status(200).json({ success: true, data: userResponse });
 });
 
-app.post('/auth/logout', (req, res) => res.status(200).json({ success: true, message: "Logged out successfully" }));
+app.post('/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ success: false, message: 'Email and password required' });
 
-app.get('/users/me', (req, res) => {
-  const token = extractAuthToken(req.headers.authorization);
-  if (!token) return res.status(401).json({ success: false, message: "Authorization token required" });
-  
-  const user = users.find(u => u.token === token);
-  if (!user) return res.status(401).json({ success: false, message: "Invalid or expired token" });
-  
-  const { password: _, ...userResponse } = user;
-  res.status(200).json({ success: true, data: userResponse });
+    let user = await User.findOne({ email, password });
+    if (!user) {
+      user = await new User({ name: email.split('@')[0], email, password }).save();
+    }
+
+    user.token = generateToken();
+    await user.save();
+    const { password: _, ...userResponse } = user.toObject();
+    res.status(200).json({ success: true, data: userResponse });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.post('/auth/logout', (req, res) => res.status(200).json({ success: true, message: 'Logged out successfully' }));
+
+app.get('/users/me', async (req, res) => {
+  try {
+    const token = extractAuthToken(req.headers.authorization);
+    if (!token) return res.status(401).json({ success: false, message: 'Authorization token required' });
+
+    const user = await User.findOne({ token });
+    if (!user) return res.status(401).json({ success: false, message: 'Invalid or expired token' });
+
+    const { password: _, ...userResponse } = user.toObject();
+    res.status(200).json({ success: true, data: userResponse });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 });
 
 // =====================
-// CAREER COACH REPORT ENDPOINT
+// CAREER COACH AI REPORT ENDPOINT
 // =====================
+
 app.post('/InterviewReport', async (req, res) => {
   try {
     const { userName, jobTitle, interviewType, responses } = req.body;
@@ -433,9 +383,7 @@ Return this exact JSON structure:
     const content = result.choices?.[0]?.message?.content || '';
 
     const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      return res.status(500).json({ success: false, message: 'AI returned unexpected format' });
-    }
+    if (!jsonMatch) return res.status(500).json({ success: false, message: 'AI returned unexpected format' });
 
     const reportData = JSON.parse(jsonMatch[0]);
     reportData.userName = userName || 'Candidate';
@@ -450,73 +398,74 @@ Return this exact JSON structure:
 });
 
 // =====================
+// GROQ PROXY — Unity sends raw Groq payload, server forwards with API key
+// =====================
+
+app.post('/generate-report', async (req, res) => {
+  try {
+    const result = await requestGroqChatCompletion(req.body);
+    return res.status(200).json(result);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// =====================
 // GROQ API ENDPOINTS
 // =====================
 
 app.post('/suggestion', async (req, res) => {
-
-    try {
-
-        const payload =
-            createGroqPayload(
-                req.body,
-                300);
-
-        const result =
-            await requestGroqChatCompletion(
-                payload);
-
-        return res.status(200).json(result);
-
-    } catch (error) {
-
-        return res.status(500).json({
-            error: error.message
-        });
-
-    }
+  try {
+    const payload = createGroqPayload(req.body, 300);
+    const result = await requestGroqChatCompletion(payload);
+    return res.status(200).json(result);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
 });
+
+// =====================
+// UNITY INTERVIEW REPORT — save parsed report from Unity to DB
+// =====================
 
 app.post('/report', async (req, res) => {
-
-    try {
-
-        const payload =
-            createGroqPayload(
-                req.body,
-                500);
-
-        const result =
-            await requestGroqChatCompletion(
-                payload);
-
-        return res.status(200).json(result);
-
-    } catch (error) {
-
-        return res.status(500).json({
-            error: error.message
-        });
-
-    }
+  try {
+    const report = new InterviewReport(req.body);
+    await report.save();
+    return res.status(201).json({ success: true, data: report });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
 });
+
+app.get('/interview-reports', async (req, res) => {
+  try {
+    const reports = await InterviewReport.find().sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: reports });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// =====================
+// HEALTH CHECK
+// =====================
 
 app.get('/health', (req, res) => {
   res.status(200).json({
     success: true,
     message: 'Server is running',
+    db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
     environment: process.env.NODE_ENV || 'development'
   });
 });
 
-// Static files served AFTER API routes so /reports and other paths aren't intercepted
+// Static files served AFTER API routes
 app.use(express.static(path.resolve()));
-
-loadReportsFromDisk();
 
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
-  console.log(`Render endpoints:`);
-  console.log(`  POST https://tfg-demo-project.onrender.com/suggestion`);
+  console.log(`  POST https://tfg-demo-project.onrender.com/generate-report`);
   console.log(`  POST https://tfg-demo-project.onrender.com/report`);
+  console.log(`  POST https://tfg-demo-project.onrender.com/suggestion`);
 });

@@ -7,6 +7,36 @@
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
     <link rel="manifest" href="manifest.webmanifest">
+    <script>
+      // Intercept fetch to capture Convai API conversation data
+      // and forward it to the parent page via postMessage
+      (function() {
+        const _fetch = window.fetch.bind(window);
+        const convaiLog = [];
+
+        window.fetch = async function(url, options) {
+          const res = await _fetch(url, options);
+          try {
+            if (typeof url === 'string' && url.includes('convai')) {
+              const clone = res.clone();
+              clone.json().then(json => {
+                const userText = json?.audio_response?.text_data || json?.user_query?.text_data || '';
+                const charText = json?.audio_response?.character_response || json?.text_response || '';
+                if (userText) {
+                  convaiLog.push({ role: 'user', text: userText });
+                  window.parent.postMessage({ type: 'CONVAI_USER_SPEECH', text: userText }, '*');
+                }
+                if (charText) {
+                  convaiLog.push({ role: 'interviewer', text: charText });
+                  window.parent.postMessage({ type: 'CONVAI_CHAR_RESPONSE', text: charText }, '*');
+                }
+              }).catch(() => {});
+            }
+          } catch(e) {}
+          return res;
+        };
+      })();
+    </script>
     <script src="TemplateData/ConvaiWebGLSDK.js"></script>
   </head>
   <body>
