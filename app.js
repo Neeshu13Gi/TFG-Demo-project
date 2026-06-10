@@ -884,63 +884,49 @@ async function generateCareerReport() {
 
     showLoading(true);
     try {
-        // Build Q&A pairs from captured Convai conversation
-        const responses = [];
-        let i = 0;
-        while (i < convaiInterviewResponses.length) {
-            const entry = convaiInterviewResponses[i];
-            if (entry.role === 'interviewer') {
-                const next = convaiInterviewResponses[i + 1];
-                responses.push({
-                    question: entry.text,
-                    answer: (next && next.role === 'user') ? next.text : ''
-                });
-                i += (next && next.role === 'user') ? 2 : 1;
-            } else {
-                i++;
-            }
+        // Fetch real report saved by Unity from backend
+        const res = await fetch(`${API_URL}/interview-reports`);
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+            throw new Error(data.message || 'Failed to fetch report');
         }
 
-        const response = await fetch(`${API_URL}/InterviewReport`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userName: currentUser?.name || 'Candidate',
-                jobTitle: job.title,
-                interviewType: 'HR + Technical + Behavioral',
-                responses
-            })
-        });
+        // Find the most recent report matching the current job title
+        const reports = data.data || [];
+        const unityReport = reports.find(r =>
+            r.jobTitle && r.jobTitle.toLowerCase() === job.title.toLowerCase()
+        ) || reports[0];
 
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-            throw new Error(data.message || 'Failed to generate report');
+        if (!unityReport) {
+            showLoading(false);
+            showToast('No report found. Please complete the interview in Unity first.', 'error');
+            return;
         }
 
-        // Save report to MongoDB
-        await fetch(`${API_URL}/report`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                jobTitle: data.data.appliedRole,
-                communication: data.data.scores?.communication,
-                confidence: data.data.scores?.confidence,
-                technicalSkills: data.data.scores?.technicalSkills,
-                problemSolving: data.data.scores?.problemSolving,
-                strengths: data.data.strengths,
-                areasToImprove: data.data.areasToImprove,
-                summary: data.data.summary,
-                userName: data.data.userName,
-                overallScore: data.data.overallScore
-            })
-        }).catch(() => {}); // non-blocking — UI still works if save fails
+        // Map Unity report fields → showCareerReport() format
+        const reportData = {
+            userName: currentUser?.name || 'Candidate',
+            appliedRole: unityReport.jobTitle || job.title,
+            interviewType: 'HR + Technical + Behavioral',
+            scores: {
+                communication: unityReport.communication,
+                confidence: unityReport.confidence,
+                technicalSkills: unityReport.technicalSkills,
+                problemSolving: unityReport.problemSolving
+            },
+            strengths: unityReport.strengths || [],
+            areasToImprove: unityReport.areasToImprove || [],
+            questionReview: [],
+            summary: unityReport.summary || '',
+            overallScore: unityReport.overallScore
+        };
 
         showLoading(false);
-        showCareerReport(data.data);
+        showCareerReport(reportData);
     } catch (error) {
         showLoading(false);
-        showToast(`Failed to generate report: ${error.message}`, 'error');
+        showToast(`Failed to load report: ${error.message}`, 'error');
     }
 }
 
