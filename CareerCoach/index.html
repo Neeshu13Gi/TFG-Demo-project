@@ -91,13 +91,13 @@
     script.src = loaderUrl; script.onload = () => { createUnityInstance(canvas, config, (progress) => { progressBarFull.style.width = 100 * progress + "%"; }).then((unityInstance) => { loadingBar.style.display = "none"; window.unityInstance = unityInstance; 
     const urlParams = new URLSearchParams(window.location.search); 
     const jobId = urlParams.get("jobId");
-     if (jobId) {
-      unityInstance.SendMessage("InterviewManager", "SetJobId", jobId);
-      // Re-send after character spawns (Unity default value overrides the first call)
-      setTimeout(() => unityInstance.SendMessage("InterviewManager", "SetJobId", jobId), 2000);
-      setTimeout(() => unityInstance.SendMessage("InterviewManager", "SetJobId", jobId), 4000);
-      setTimeout(() => unityInstance.SendMessage("InterviewManager", "SetJobId", jobId), 6000);
-    } }).catch((message) => { alert(message); }); };
+     if (jobId) 
+    { unityInstance.SendMessage("InterviewManager",
+     "SetJobId",
+      jobId
+    ); 
+
+    } }).catch((message) => { alert(message); }); }; 
     document.body.appendChild(script); 
     </script>
 </body>
