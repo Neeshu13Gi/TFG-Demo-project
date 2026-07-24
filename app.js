@@ -1063,8 +1063,8 @@ function launchUnityWebGL() {
                 id="webglIframe"
                 src="${webglUrl}"
                 class="webgl-fullscreen-frame"
-                allow="fullscreen"
-                sandbox="allow-scripts allow-popups allow-pointer-lock allow-modals allow-top-navigation-by-user-activation"
+                allow="fullscreen; microphone"
+                sandbox="allow-same-origin allow-scripts allow-popups allow-pointer-lock allow-modals allow-top-navigation-by-user-activation allow-forms"
             ></iframe>
         </div>
     `;
