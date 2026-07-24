@@ -1,0 +1,31 @@
+{
+  "_id": "k1a9zmjn6",
+  "user": "vgnkdgcjr",
+  "userToken": "DUMMY_TOKEN_1776146064865_2MNDOQDY",
+  "module": {
+    "_id": "6920a2eda37e548ad7b21444",
+    "title": "Leadership & Management",
+    "thumbnailUrl": ""
+  },
+  "overallScore": "4.2",
+  "interactionTime": "2 min 10 sec",
+  "speakingPace": {
+    "wpm": 118,
+    "rating": "Good"
+  },
+  "fillerWords": {
+    "count": 3,
+    "rating": "Good"
+  },
+  "skills": {
+    "communication": "Intermediate",
+    "problemSolving": "Novice",
+    "clarity": "Intermediate",
+    "bodyLanguage": "Novice"
+  },
+  "transcript": "Demo report: complete a module to generate real data.",
+  "feedback": "This is a sample report shown when you have no saved reports yet.",
+  "createdAt": "2026-04-14T09:00:32.148Z",
+  "updatedAt": "2026-04-14T09:00:32.148Z",
+  "isDummy": true
+}
