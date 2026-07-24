@@ -1,0 +1,274 @@
+{
+    "topics": [
+      {
+        "heading": "EQ based leadership",
+        "description": "Learn emotional intelligence, empathy, communication, and leadership strategies for managing teams effectively.",
+        "freeFlowHeading": "Free-flow Discussion",
+  
+        "learningTopics": [
+          "Leadership mindset",
+          "Emotional intelligence",
+          "Empathy building",
+          "Team communication"
+        ],
+  
+        "popularDiscussionTopics": [
+          "What is EQ based leadership?",
+          "How to motivate employees effectively?",
+          "Ways to improve emotional intelligence",
+          "Handling team conflicts professionally",
+          "Leadership communication strategies",
+          "Building trust within teams"
+        ],
+  
+        "freeFlowDiscussion": [
+          "How can I become a better leader?",
+          "How do I manage emotional conflicts in teams?",
+          "Can we practice leadership conversations?"
+        ]
+      },
+  
+      {
+        "heading": "Decision Making",
+        "description": "Improve strategic thinking and decision-making skills for workplace and business scenarios.",
+        "freeFlowHeading": "Free-flow Discussion",
+  
+        "learningTopics": [
+          "Critical analysis",
+          "Risk management",
+          "Strategic decisions"
+        ],
+  
+        "popularDiscussionTopics": [
+          "What is effective decision making?",
+          "Business decision case studies",
+          "Strategic thinking techniques",
+          "Critical thinking exercises",
+          "Handling high-pressure decisions",
+          "Improving workplace judgment"
+        ],
+  
+        "freeFlowDiscussion": [
+          "Help me make better business decisions",
+          "How do leaders make tough choices?",
+          "Practice a decision-making scenario"
+        ]
+      },
+  
+      {
+        "heading": "Crisis Management",
+        "description": "Learn how to handle stressful situations, workplace crises, and emergency leadership scenarios.",
+        "freeFlowHeading": "Free-flow Discussion",
+  
+        "learningTopics": [
+          "Crisis planning",
+          "Leadership under pressure",
+          "Communication management"
+        ],
+  
+        "popularDiscussionTopics": [
+          "How to manage workplace crisis?",
+          "Leadership during emergencies",
+          "Handling stressful situations",
+          "Team communication in crisis",
+          "Crisis recovery planning",
+          "Conflict management strategies"
+        ],
+  
+        "freeFlowDiscussion": [
+          "How do I stay calm during crisis?",
+          "Practice a workplace emergency scenario",
+          "How should leaders respond to pressure?"
+        ]
+      },
+  
+      {
+        "heading": "Critical Thinking",
+        "description": "Develop logical reasoning and analytical problem-solving skills.",
+        "freeFlowHeading": "Free-flow Discussion",
+  
+        "learningTopics": [
+          "Logical analysis",
+          "Decision frameworks",
+          "Bias awareness"
+        ],
+  
+        "popularDiscussionTopics": [
+          "Critical thinking frameworks",
+          "Analytical problem solving",
+          "Logical reasoning exercises",
+          "Identifying cognitive bias",
+          "Business analysis methods",
+          "Creative thinking techniques"
+        ],
+  
+        "freeFlowDiscussion": [
+          "Can we solve a complex problem together?",
+          "How do I think more analytically?",
+          "Practice critical thinking exercises"
+        ]
+      },
+  
+      {
+        "heading": "Problem Solving",
+        "description": "Learn structured methods for solving workplace and business problems efficiently.",
+        "freeFlowHeading": "Free-flow Discussion",
+  
+        "learningTopics": [
+          "Root cause analysis",
+          "Creative solutions",
+          "Decision mapping"
+        ],
+  
+        "popularDiscussionTopics": [
+          "Root cause analysis",
+          "Problem-solving frameworks",
+          "Creative business solutions",
+          "Handling workplace challenges",
+          "Decision mapping methods",
+          "Real-world problem-solving scenarios"
+        ],
+  
+        "freeFlowDiscussion": [
+          "Help me solve a workplace issue",
+          "Can we analyze a real-world problem?",
+          "Teach me structured problem solving"
+        ]
+      },
+  
+      {
+        "heading": "Leading teams",
+        "description": "Learn team leadership, collaboration, motivation, and performance management skills.",
+        "freeFlowHeading": "Free-flow Discussion",
+  
+        "learningTopics": [
+          "Team communication",
+          "Delegation",
+          "Motivation strategies"
+        ],
+  
+        "popularDiscussionTopics": [
+          "Effective team leadership",
+          "Managing team productivity",
+          "Employee engagement methods",
+          "Conflict resolution in teams",
+          "Communication within teams",
+          "Team motivation techniques"
+        ],
+  
+        "freeFlowDiscussion": [
+          "How do I motivate my team?",
+          "Practice leading a difficult team",
+          "How can I improve collaboration?"
+        ]
+      },
+  
+      {
+        "heading": "Strategic Thinking",
+        "description": "Build long-term planning and strategic business thinking capabilities.",
+        "freeFlowHeading": "Free-flow Discussion",
+  
+        "learningTopics": [
+          "Business strategy",
+          "Future planning",
+          "Market analysis"
+        ],
+  
+        "popularDiscussionTopics": [
+          "Strategic planning methods",
+          "Long-term business growth",
+          "Competitive market analysis",
+          "Business vision creation",
+          "Strategic leadership examples",
+          "Innovation and future planning"
+        ],
+  
+        "freeFlowDiscussion": [
+          "How can I think strategically?",
+          "Teach me business planning",
+          "Practice strategic analysis"
+        ]
+      },
+  
+      {
+        "heading": "Selling Skills",
+        "description": "Learn sales communication, persuasion, customer engagement, and closing techniques.",
+        "freeFlowHeading": "Free-flow Discussion",
+  
+        "learningTopics": [
+          "Customer communication",
+          "Sales psychology",
+          "Persuasion skills"
+        ],
+  
+        "popularDiscussionTopics": [
+          "Customer communication skills",
+          "Sales psychology techniques",
+          "Handling customer objections",
+          "Closing sales effectively",
+          "Cross-selling opportunities",
+          "Building customer trust"
+        ],
+  
+        "freeFlowDiscussion": [
+          "Practice a sales pitch",
+          "How do I convince customers?",
+          "Teach me closing techniques"
+        ]
+      },
+  
+      {
+        "heading": "Negotiation Skills",
+        "description": "Develop effective negotiation and conflict-resolution techniques for professional environments.",
+        "freeFlowHeading": "Free-flow Discussion",
+  
+        "learningTopics": [
+          "Negotiation tactics",
+          "Conflict management",
+          "Communication skills"
+        ],
+  
+        "popularDiscussionTopics": [
+          "Negotiation techniques",
+          "Conflict resolution strategies",
+          "Business negotiation examples",
+          "Salary negotiation tips",
+          "Client handling methods",
+          "Persuasion communication skills"
+        ],
+  
+        "freeFlowDiscussion": [
+          "Practice negotiation scenarios",
+          "How do I negotiate better deals?",
+          "Teach me conflict resolution"
+        ]
+      },
+  
+      {
+        "heading": "Interview Preparation",
+        "description": "Prepare for professional interviews, communication rounds, and stress interviews.",
+        "freeFlowHeading": "Free-flow Discussion",
+  
+        "learningTopics": [
+          "HR interview preparation",
+          "Confidence building",
+          "Communication skills"
+        ],
+  
+        "popularDiscussionTopics": [
+          "Common HR interview questions",
+          "Stress interview techniques",
+          "Communication during interviews",
+          "Confidence building tips",
+          "Professional body language",
+          "Mock interview practice"
+        ],
+  
+        "freeFlowDiscussion": [
+          "Conduct a mock interview",
+          "Help me answer HR questions",
+          "Teach me interview confidence"
+        ]
+      }
+    ]
+  }
