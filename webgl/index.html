@@ -34,14 +34,63 @@
 
   if (!isLocalHost) return;
 
-  const PROD_ORIGIN = "https://tfg.metaverse911.in/api";
+  const PROD_ORIGINS = [
+    "https://tfg.metaverse911.in/api",
+    "https://tfg.metaverse911.in",
+    "https://tfg-demo-project.onrender.com"
+  ];
 
   const rewriteUrl = (input) => {
     try {
-      const urlStr = typeof input === "string" ? input : input?.url;
-      if (!urlStr || typeof urlStr !== "string") return input;
-      if (!urlStr.startsWith(PROD_ORIGIN)) return input;
-      return urlStr.replace(PROD_ORIGIN, window.location.origin);
+      let rawUrl = "";
+
+      if (typeof input === "string") {
+        rawUrl = input;
+      } else if (input instanceof URL) {
+        rawUrl = input.href;
+      } else if (input && typeof input === "object") {
+        if (typeof input.url === "string") rawUrl = input.url;
+        else if (typeof input.href === "string") rawUrl = input.href;
+        else if (typeof input.target === "string") rawUrl = input.target;
+      }
+
+      if (!rawUrl) return input;
+
+      const trimmed = rawUrl.trim();
+      const repaired = trimmed
+        .replace(/^https:\/\/(?!\/)/i, "https://")
+        .replace(/^http:\/\/(?!\/)/i, "http://")
+        .replace(/^https:\/(?!\/)/i, "https://")
+        .replace(/^http:\/(?!\/)/i, "http://");
+
+      if (/^https?:\/\//i.test(repaired)) {
+        const parsed = new URL(repaired);
+        const isProductionUrl = PROD_ORIGINS.some((origin) => {
+          try {
+            return parsed.origin === origin || parsed.hostname === new URL(origin).hostname;
+          } catch {
+            return false;
+          }
+        });
+
+        if (isProductionUrl) {
+          const localPath = parsed.pathname.replace(/^\/api(?=\/|$)/, "").replace(/\/+/g, "/") || "/";
+          return `${window.location.origin}${localPath}${parsed.search}${parsed.hash}`;
+        }
+
+        return repaired;
+      }
+
+      if (repaired.startsWith("//")) {
+        const normalizedRelativePath = repaired.replace(/\/+/g, "/").replace(/^\/+/, "/");
+        return `${window.location.origin}${normalizedRelativePath}`;
+      }
+
+      if (repaired.startsWith("/users/profile") || repaired.startsWith("/modules")) {
+        return `${window.location.origin}${repaired}`;
+      }
+
+      return input;
     } catch {
       return input;
     }
@@ -49,20 +98,35 @@
 
   const originalFetch = window.fetch?.bind(window);
   if (originalFetch) {
-    window.fetch = (input, init) => originalFetch(rewriteUrl(input), init);
+    window.fetch = function (input, init) {
+      const rewrittenInput = rewriteUrl(input);
+
+      if (input instanceof Request && rewrittenInput !== input) {
+        return originalFetch(new Request(rewrittenInput, {
+          method: input.method,
+          headers: input.headers,
+          body: input.body,
+          mode: input.mode,
+          credentials: input.credentials,
+          cache: input.cache,
+          redirect: input.redirect,
+          referrer: input.referrer,
+          integrity: input.integrity,
+          keepalive: input.keepalive
+        }), init);
+      }
+
+      return originalFetch(rewrittenInput, init);
+    };
   }
 
   const OriginalXHR = window.XMLHttpRequest;
   if (OriginalXHR) {
-    function PatchedXHR() {
-      const xhr = new OriginalXHR();
-      const originalOpen = xhr.open;
-      xhr.open = function (method, url, ...rest) {
-        return originalOpen.call(this, method, rewriteUrl(url), ...rest);
-      };
-      return xhr;
-    }
-    window.XMLHttpRequest = PatchedXHR;
+    const xhrProto = OriginalXHR.prototype;
+    const originalOpen = xhrProto.open;
+    xhrProto.open = function (method, url, ...rest) {
+      return originalOpen.call(this, method, rewriteUrl(url), ...rest);
+    };
   }
 })();
 
