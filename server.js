@@ -23,19 +23,10 @@ mongoose.connect(process.env.MONGODB_URI || '')
 // CORS & MIDDLEWARE
 // =====================
 
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:5500',
-  'https://tfg-demo-project.onrender.com'
-];
-
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error('CORS policy does not allow this origin'));
-  },
+  origin: true,
   credentials: true,
-  methods: ['GET', 'POST', 'OPTIONS'],
+  methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
