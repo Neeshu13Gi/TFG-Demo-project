@@ -1027,56 +1027,77 @@ function closeCareerCoach() {
 // UNITY WEBGL INTEGRATION
 // =====================
 function launchUnityWebGL() {
-    console.log(`🎮 Launching Unity WebGL for module: ${currentModule._id}`);
+    console.log(`🎮 Launching Unity WebGL for module: ${currentModule?._id || 'unknown'}`);
     console.log('📦 Module data:', currentModule);
-    
+
+    if (!currentModule) {
+        showToast('Please select a module first', 'error');
+        return;
+    }
+
     // Get token using correct key
     let token = localStorage.getItem(TOKEN_KEY);
     if (!token && currentUser && currentUser.token) {
         token = currentUser.token;
     }
-    
+
     console.log(`🔑 Token available: ${token ? 'YES (' + token.substring(0, 20) + '...)' : 'NO'}`);
     console.log(`🔑 TOKEN_KEY = '${TOKEN_KEY}'`);
     console.log(`🔑 currentUser =`, currentUser);
-    
-    // Build URL with module ID and token
-    let webglUrl = `/webgl/index.html?moduleId=${currentModule._id}`;
+
+    const moduleTitle = encodeURIComponent(currentModule.title || 'Module');
+    const userName = encodeURIComponent(currentUser?.name || currentUser?.email || 'User');
+    const baseUrl = window.location.origin;
+
+    // Build URL with module ID, token, and user context
+    let webglUrl = `${baseUrl}/webgl/index.html?moduleId=${currentModule._id}&name=${userName}&moduleTitle=${moduleTitle}`;
     if (token) {
         webglUrl += `&token=${encodeURIComponent(token)}`;
         console.log('✅ Token added to WebGL URL');
     } else {
         console.warn('⚠️ No token found - WebGL will run without authentication');
     }
-    
+
     showToast(`${currentModule.title} module loaded!`, 'success');
     console.log('📡 WebGL URL:', webglUrl);
-    
-    // Navigate to WebGL player in new approach - open it in the unity container
-    const placeholder = document.querySelector('.unity-webgl-placeholder');
-    placeholder.innerHTML = `
-        <div class="unity-webgl-fullscreen">
-            <div class="unity-webgl-toolbar">
-                <button class="btn btn-secondary" onclick="closeUnityWebGL()">Close Player</button>
-            </div>
-            <iframe 
-                id="webglIframe"
-                src="${webglUrl}"
-                class="webgl-fullscreen-frame"
-                allowfullscreen
-                allow="fullscreen"
-                sandbox="allow-same-origin allow-scripts allow-popups allow-pointer-lock allow-modals allow-top-navigation-by-user-activation allow-fullscreen"
-            ></iframe>
-        </div>
-    `;
-    
-    document.getElementById('unityContainer').style.display = 'block';
 
-    const iframe = document.getElementById('webglIframe');
-    if (iframe && iframe.requestFullscreen) {
-        iframe.requestFullscreen().catch((error) => {
-            console.warn('Unable to request fullscreen for Unity iframe:', error);
-        });
+    const placeholder = document.querySelector('.unity-webgl-placeholder');
+    const unityContainer = document.getElementById('unityContainer');
+
+    if (!placeholder || !unityContainer) {
+        console.warn('Unity container not found; opening WebGL in a new tab');
+        window.open(webglUrl, '_blank', 'noopener,noreferrer');
+        return;
+    }
+
+    try {
+        placeholder.innerHTML = `
+            <div class="unity-webgl-fullscreen">
+                <div class="unity-webgl-toolbar">
+                    <button class="btn btn-secondary" onclick="closeUnityWebGL()">Close Player</button>
+                </div>
+                <iframe 
+                    id="webglIframe"
+                    src="${webglUrl}"
+                    class="webgl-fullscreen-frame"
+                    allowfullscreen
+                    allow="fullscreen"
+                    sandbox="allow-same-origin allow-scripts allow-popups allow-pointer-lock allow-modals allow-top-navigation-by-user-activation allow-fullscreen"
+                ></iframe>
+            </div>
+        `;
+
+        unityContainer.style.display = 'block';
+
+        const iframe = document.getElementById('webglIframe');
+        if (iframe && iframe.requestFullscreen) {
+            iframe.requestFullscreen().catch((error) => {
+                console.warn('Unable to request fullscreen for Unity iframe:', error);
+            });
+        }
+    } catch (error) {
+        console.error('Failed to launch Unity WebGL iframe:', error);
+        window.open(webglUrl, '_blank', 'noopener,noreferrer');
     }
 }
 

@@ -41,6 +41,24 @@ app.use(cors({
 
 app.use(express.json());
 
+app.use((req, res, next) => {
+  if (typeof req.url === 'string') {
+    req.url = req.url.replace(/\/+/g, '/');
+    if (req.url.startsWith('/api/')) {
+      req.url = req.url.replace(/^\/api(?=\/|$)/, '');
+    }
+  }
+
+  if (typeof req.originalUrl === 'string') {
+    req.originalUrl = req.originalUrl.replace(/\/+/g, '/');
+    if (req.originalUrl.startsWith('/api/')) {
+      req.originalUrl = req.originalUrl.replace(/^\/api(?=\/|$)/, '');
+    }
+  }
+
+  next();
+});
+
 // =====================
 // GROQ HELPERS
 // =====================
@@ -322,9 +340,9 @@ app.post('/auth/login', async (req, res) => {
 
 app.post('/auth/logout', (req, res) => res.status(200).json({ success: true, message: 'Logged out successfully' }));
 
-app.get('/users/me', async (req, res) => {
+app.get(['/users/me', '/users/profile'], async (req, res) => {
   try {
-    const token = extractAuthToken(req.headers.authorization);
+    const token = extractAuthToken(req.headers.authorization) || req.query.token || req.query.authToken || null;
     if (!token) return res.status(401).json({ success: false, message: 'Authorization token required' });
 
     const user = await User.findOne({ token });
@@ -458,6 +476,14 @@ app.get('/health', (req, res) => {
     db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
     environment: process.env.NODE_ENV || 'development'
   });
+});
+
+app.use((req, res, next) => {
+  if (typeof req.url === 'string' && req.url.includes('//')) {
+    const normalizedUrl = req.url.replace(/\/+/g, '/');
+    return res.redirect(301, normalizedUrl);
+  }
+  next();
 });
 
 // Static files served AFTER API routes
